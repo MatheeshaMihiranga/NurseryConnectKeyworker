@@ -8,6 +8,7 @@
 import XCTest
 @testable import NurseryConnectKeyworker
 
+@MainActor
 final class AlertsViewModelTests: XCTestCase {
 
     override func setUp() {
@@ -17,94 +18,78 @@ final class AlertsViewModelTests: XCTestCase {
 
     // MARK: - Initial Load
 
-    func test_loadAlerts_populatesAlerts() async {
-        let vm = await MainActor.run { AlertsViewModel() }
-        let isEmpty = await MainActor.run { vm.alerts.isEmpty }
-        XCTAssertFalse(isEmpty, "Alerts should not be empty with sample data")
+    func test_loadAlerts_populatesAlerts() {
+        let vm = AlertsViewModel()
+        XCTAssertFalse(vm.alerts.isEmpty, "Alerts should not be empty with sample data")
     }
 
     // MARK: - Unacknowledged Count
 
-    func test_unacknowledgedCount_matchesUnreadAlerts() async {
-        let vm = await MainActor.run { AlertsViewModel() }
-        let expected = await MainActor.run { vm.alerts.filter { !$0.isAcknowledged }.count }
-        let count = await MainActor.run { vm.unacknowledgedCount }
-        XCTAssertEqual(count, expected)
+    func test_unacknowledgedCount_matchesUnreadAlerts() {
+        let vm = AlertsViewModel()
+        let expected = vm.alerts.filter { !$0.isAcknowledged }.count
+        XCTAssertEqual(vm.unacknowledgedCount, expected)
     }
 
     // MARK: - filteredAlerts (showAcknowledged = false — default)
 
-    func test_filteredAlerts_onlyUnacknowledged_byDefault() async {
-        let vm = await MainActor.run { AlertsViewModel() }
-        await MainActor.run { vm.showAcknowledgedAlerts = false }
-        let results = await MainActor.run { vm.filteredAlerts }
+    func test_filteredAlerts_onlyUnacknowledged_byDefault() {
+        let vm = AlertsViewModel()
+        vm.showAcknowledgedAlerts = false
+        let results = vm.filteredAlerts
         XCTAssertTrue(results.allSatisfy { !$0.isAcknowledged })
     }
 
-    func test_filteredAlerts_includesAcknowledged_whenToggled() async {
-        let vm = await MainActor.run { AlertsViewModel() }
-        await MainActor.run { vm.showAcknowledgedAlerts = true }
-        let filteredCount = await MainActor.run { vm.filteredAlerts.count }
-        let allCount = await MainActor.run { vm.alerts.count }
-        XCTAssertEqual(filteredCount, allCount)
+    func test_filteredAlerts_includesAcknowledged_whenToggled() {
+        let vm = AlertsViewModel()
+        vm.showAcknowledgedAlerts = true
+        XCTAssertEqual(vm.filteredAlerts.count, vm.alerts.count)
     }
 
     // MARK: - Priority Filtering
 
-    func test_filteredAlerts_filtersByPriority_urgent() async {
-        let vm = await MainActor.run { AlertsViewModel() }
-        await MainActor.run {
-            vm.showAcknowledgedAlerts = true
-            vm.selectedPriority = .urgent
-        }
-        let results = await MainActor.run { vm.filteredAlerts }
+    func test_filteredAlerts_filtersByPriority_urgent() {
+        let vm = AlertsViewModel()
+        vm.showAcknowledgedAlerts = true
+        vm.selectedPriority = .urgent
+        let results = vm.filteredAlerts
         XCTAssertTrue(results.allSatisfy { $0.priority == .urgent })
     }
 
-    func test_filteredAlerts_returnsAll_whenPriorityNil() async {
-        let vm = await MainActor.run { AlertsViewModel() }
-        await MainActor.run {
-            vm.showAcknowledgedAlerts = true
-            vm.selectedPriority = nil
-        }
-        let filteredCount = await MainActor.run { vm.filteredAlerts.count }
-        let allCount = await MainActor.run { vm.alerts.count }
-        XCTAssertEqual(filteredCount, allCount)
+    func test_filteredAlerts_returnsAll_whenPriorityNil() {
+        let vm = AlertsViewModel()
+        vm.showAcknowledgedAlerts = true
+        vm.selectedPriority = nil
+        XCTAssertEqual(vm.filteredAlerts.count, vm.alerts.count)
     }
 
     // MARK: - Alert Type Filtering
 
-    func test_filteredAlerts_filtersByType_allergy() async {
-        let vm = await MainActor.run { AlertsViewModel() }
-        await MainActor.run {
-            vm.showAcknowledgedAlerts = true
-            vm.selectedAlertType = .allergy
-        }
-        let results = await MainActor.run { vm.filteredAlerts }
+    func test_filteredAlerts_filtersByType_allergy() {
+        let vm = AlertsViewModel()
+        vm.showAcknowledgedAlerts = true
+        vm.selectedAlertType = .allergy
+        let results = vm.filteredAlerts
         XCTAssertTrue(results.allSatisfy { $0.alertType == .allergy })
     }
 
-    func test_allergyAlerts_onlyContainAllergyType() async {
-        let vm = await MainActor.run { AlertsViewModel() }
-        let results = await MainActor.run { vm.allergyAlerts }
-        XCTAssertTrue(results.allSatisfy { $0.alertType == .allergy })
+    func test_allergyAlerts_onlyContainAllergyType() {
+        let vm = AlertsViewModel()
+        XCTAssertTrue(vm.allergyAlerts.allSatisfy { $0.alertType == .allergy })
     }
 
-    func test_medicalAlerts_onlyContainMedicalType() async {
-        let vm = await MainActor.run { AlertsViewModel() }
-        let results = await MainActor.run { vm.medicalAlerts }
-        XCTAssertTrue(results.allSatisfy { $0.alertType == .medical })
+    func test_medicalAlerts_onlyContainMedicalType() {
+        let vm = AlertsViewModel()
+        XCTAssertTrue(vm.medicalAlerts.allSatisfy { $0.alertType == .medical })
     }
 
     // MARK: - Search Filtering
 
-    func test_filteredAlerts_filtersByTitle_caseInsensitive() async {
-        let vm = await MainActor.run { AlertsViewModel() }
-        await MainActor.run {
-            vm.showAcknowledgedAlerts = true
-            vm.searchText = "peanut"
-        }
-        let results = await MainActor.run { vm.filteredAlerts }
+    func test_filteredAlerts_filtersByTitle_caseInsensitive() {
+        let vm = AlertsViewModel()
+        vm.showAcknowledgedAlerts = true
+        vm.searchText = "peanut"
+        let results = vm.filteredAlerts
         XCTAssertTrue(results.allSatisfy {
             $0.title.localizedCaseInsensitiveContains("peanut") ||
             $0.message.localizedCaseInsensitiveContains("peanut") ||
@@ -112,36 +97,34 @@ final class AlertsViewModelTests: XCTestCase {
         })
     }
 
-    func test_filteredAlerts_returnsEmpty_forNonExistentSearch() async {
-        let vm = await MainActor.run { AlertsViewModel() }
-        await MainActor.run {
-            vm.showAcknowledgedAlerts = true
-            vm.searchText = "ZZZNOMATCH999"
-        }
-        let isEmpty = await MainActor.run { vm.filteredAlerts.isEmpty }
-        XCTAssertTrue(isEmpty)
+    func test_filteredAlerts_returnsEmpty_forNonExistentSearch() {
+        let vm = AlertsViewModel()
+        vm.showAcknowledgedAlerts = true
+        vm.searchText = "ZZZNOMATCH999"
+        XCTAssertTrue(vm.filteredAlerts.isEmpty)
     }
 
     // MARK: - Critical Alerts
 
-    func test_criticalAlerts_onlyContainUrgentOrCriticalPriority() async {
-        let vm = await MainActor.run { AlertsViewModel() }
-        let results = await MainActor.run { vm.criticalAlerts }
-        XCTAssertTrue(results.allSatisfy { $0.priority == .urgent || $0.priority == .critical })
+    func test_criticalAlerts_onlyContainUrgentOrCriticalPriority() {
+        let vm = AlertsViewModel()
+        let results = vm.criticalAlerts
+        XCTAssertTrue(results.allSatisfy {
+            $0.priority == .urgent || $0.priority == .critical
+        })
     }
 
-    func test_criticalAlerts_areAllUnacknowledged() async {
-        let vm = await MainActor.run { AlertsViewModel() }
-        let results = await MainActor.run { vm.criticalAlerts }
-        XCTAssertTrue(results.allSatisfy { !$0.isAcknowledged })
+    func test_criticalAlerts_areAllUnacknowledged() {
+        let vm = AlertsViewModel()
+        XCTAssertTrue(vm.criticalAlerts.allSatisfy { !$0.isAcknowledged })
     }
 
     // MARK: - Sorted Alerts
 
-    func test_sortedAlerts_higherPriorityFirst() async {
-        let vm = await MainActor.run { AlertsViewModel() }
-        await MainActor.run { vm.showAcknowledgedAlerts = true }
-        let sorted = await MainActor.run { vm.sortedAlerts }
+    func test_sortedAlerts_higherPriorityFirst() {
+        let vm = AlertsViewModel()
+        vm.showAcknowledgedAlerts = true
+        let sorted = vm.sortedAlerts
         for i in 0..<(sorted.count - 1) {
             XCTAssertGreaterThanOrEqual(
                 sorted[i].priority.sortOrder,
@@ -153,39 +136,33 @@ final class AlertsViewModelTests: XCTestCase {
 
     // MARK: - Acknowledge Actions
 
-    func test_acknowledgeAlert_immediatelyUpdatesViewModel() async {
-        let vm = await MainActor.run { AlertsViewModel() }
-        let maybeUnread = await MainActor.run { vm.alerts.first(where: { !$0.isAcknowledged }) }
-        guard let unread = maybeUnread else { return }
-        let countBefore = await MainActor.run { vm.unacknowledgedCount }
-        await MainActor.run { vm.acknowledgeAlert(unread) }
-        let countAfter = await MainActor.run { vm.unacknowledgedCount }
-        XCTAssertLessThanOrEqual(countAfter, countBefore)
+    func test_acknowledgeAlert_immediatelyUpdatesViewModel() {
+        let vm = AlertsViewModel()
+        guard let unread = vm.alerts.first(where: { !$0.isAcknowledged }) else {
+            return // No unread alerts available — skip
+        }
+        let countBefore = vm.unacknowledgedCount
+        vm.acknowledgeAlert(unread)
+        XCTAssertLessThanOrEqual(vm.unacknowledgedCount, countBefore)
     }
 
     // MARK: - Clear Filters
 
-    func test_clearFilters_resetsAllFilters() async {
-        let vm = await MainActor.run { AlertsViewModel() }
-        await MainActor.run {
-            vm.selectedPriority = .urgent
-            vm.selectedAlertType = .allergy
-            vm.searchText = "test"
-            vm.clearFilters()
-        }
-        let selectedPriority = await MainActor.run { vm.selectedPriority }
-        let selectedAlertType = await MainActor.run { vm.selectedAlertType }
-        let searchText = await MainActor.run { vm.searchText }
-        XCTAssertNil(selectedPriority)
-        XCTAssertNil(selectedAlertType)
-        XCTAssertEqual(searchText, "")
+    func test_clearFilters_resetsAllFilters() {
+        let vm = AlertsViewModel()
+        vm.selectedPriority = .urgent
+        vm.selectedAlertType = .allergy
+        vm.searchText = "test"
+        vm.clearFilters()
+        XCTAssertNil(vm.selectedPriority)
+        XCTAssertNil(vm.selectedAlertType)
+        XCTAssertEqual(vm.searchText, "")
     }
 
     // MARK: - Overdue Reminders
 
-    func test_overdueReminders_containsOverdueDiaryType() async {
-        let vm = await MainActor.run { AlertsViewModel() }
-        let results = await MainActor.run { vm.overdueReminders }
-        XCTAssertTrue(results.allSatisfy { $0.alertType == .overdueDiary })
+    func test_overdueReminders_containsOverdueDiaryType() {
+        let vm = AlertsViewModel()
+        XCTAssertTrue(vm.overdueReminders.allSatisfy { $0.alertType == .overdueDiary })
     }
 }
