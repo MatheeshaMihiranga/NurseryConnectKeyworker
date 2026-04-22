@@ -63,6 +63,10 @@ class DataService {
         childId: UUID,
         childName: String
     ) {
+        guard !useSampleData else {
+            print("✅ Diary entry added (sample mode): \(title) for \(childName)")
+            return
+        }
         let entry = DiaryEntry(
             id: UUID(),
             childId: childId,
@@ -77,11 +81,8 @@ class DataService {
             duration: nil,
             moodRating: nil
         )
-        
-        if !useSampleData {
-            persistenceService.mainContext.insert(entry)
-            persistenceService.save()
-        }
+        persistenceService.mainContext.insert(entry)
+        persistenceService.save()
         
         print("✅ Diary entry added: \(title) for \(childName)")
     }
@@ -159,10 +160,11 @@ class DataService {
     }
     
     func markIncidentAsReviewed(_ report: IncidentReport) {
-        report.managerReviewed = true
-        report.managerReviewTime = Date()
-        
+        // Only mutate @Model properties when a real ModelContext exists.
+        // Mutating SwiftData @Model objects without a context causes SIGABRT.
         if !useSampleData {
+            report.managerReviewed = true
+            report.managerReviewTime = Date()
             persistenceService.save()
         }
         
@@ -179,10 +181,11 @@ class DataService {
     }
     
     func markParentNotified(_ report: IncidentReport) {
-        report.parentNotified = true
-        report.parentNotificationTime = Date()
-        
+        // Only mutate @Model properties when a real ModelContext exists.
+        // Mutating SwiftData @Model objects without a context causes SIGABRT.
         if !useSampleData {
+            report.parentNotified = true
+            report.parentNotificationTime = Date()
             persistenceService.save()
         }
         
@@ -242,9 +245,10 @@ class DataService {
     }
     
     func acknowledgeAlert(_ alert: AlertItem) {
-        alert.acknowledgeAlert()
-        
+        // Only mutate @Model properties when a real ModelContext exists.
+        // Mutating SwiftData @Model objects without a context causes SIGABRT.
         if !useSampleData {
+            alert.acknowledgeAlert()
             persistenceService.save()
         }
         
