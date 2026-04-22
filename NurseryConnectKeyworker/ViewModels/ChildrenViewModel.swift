@@ -53,7 +53,8 @@ class ChildrenViewModel {
             return assignedChildren
         }
         return assignedChildren.filter {
-            $0.name.localizedCaseInsensitiveContains(searchText)
+            $0.name.localizedCaseInsensitiveContains(searchText) ||
+            $0.room.localizedCaseInsensitiveContains(searchText)
         }
     }
     

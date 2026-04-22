@@ -45,7 +45,7 @@ struct IncidentReportView: View {
                             Button("All Categories") {
                                 viewModel.selectedCategory = nil
                             }
-                            ForEach([IncidentCategory.injury, .illness, .behavior, .safeguarding, .accident], id: \.self) { category in
+                            ForEach([IncidentCategory.injury, .illness, .behavior, .safeguarding, .accident, .allergic, .other], id: \.self) { category in
                                 Button(category.rawValue.capitalized) {
                                     viewModel.selectedCategory = category
                                 }
@@ -56,7 +56,7 @@ struct IncidentReportView: View {
                             Button("All Severities") {
                                 viewModel.selectedSeverity = nil
                             }
-                            ForEach([IncidentSeverity.minor, .moderate, .major], id: \.self) { severity in
+                            ForEach([IncidentSeverity.minor, .moderate, .major, .serious], id: \.self) { severity in
                                 Button(severity.rawValue.capitalized) {
                                     viewModel.selectedSeverity = severity
                                 }
@@ -254,15 +254,15 @@ struct IncidentReportFormView: View {
                 // Incident Classification
                 Section("Incident Classification") {
                     Picker("Category", selection: $selectedCategory) {
-                        ForEach([IncidentCategory.injury, .illness, .behavior, .safeguarding, .accident], id: \.self) { category in
-                            Text(category.rawValue.capitalized)
+                        ForEach([IncidentCategory.injury, .illness, .behavior, .safeguarding, .accident, .allergic, .other], id: \.self) { category in
+                            Text(category.rawValue)
                                 .tag(category)
                         }
                     }
                     .accessibilityLabel("Incident category picker")
                     
                     Picker("Severity", selection: $selectedSeverity) {
-                        ForEach([IncidentSeverity.minor, .moderate, .major], id: \.self) { severity in
+                        ForEach([IncidentSeverity.minor, .moderate, .major, .serious], id: \.self) { severity in
                             HStack {
                                 Circle()
                                     .fill(colorFor(severity))
@@ -274,7 +274,7 @@ struct IncidentReportFormView: View {
                     }
                     .accessibilityLabel("Severity level picker")
                     
-                    if selectedCategory == .safeguarding || selectedSeverity == .major {
+                    if selectedCategory == .safeguarding || selectedSeverity == .major || selectedSeverity == .serious {
                         Label {
                             Text("This incident requires urgent attention and manager review")
                                 .font(.caption)

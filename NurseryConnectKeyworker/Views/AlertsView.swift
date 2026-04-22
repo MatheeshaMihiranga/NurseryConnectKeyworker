@@ -134,6 +134,8 @@ struct AlertsView: View {
                         }, onDismiss: {
                             viewModel.deleteAlert(alert)
                         })
+                        .contentShape(Rectangle())
+                        .onTapGesture { selectedAlert = alert }
                         .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
                         .listRowSeparator(.hidden)
                         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
@@ -173,6 +175,8 @@ struct AlertsView: View {
                     }, onDismiss: {
                         viewModel.deleteAlert(alert)
                     })
+                    .contentShape(Rectangle())
+                    .onTapGesture { selectedAlert = alert }
                     .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
                     .listRowSeparator(.hidden)
                     .swipeActions(edge: .trailing, allowsFullSwipe: true) {
@@ -263,7 +267,7 @@ struct AlertDetailView: View {
                         .foregroundStyle(.secondary)
                     
                     // Related Child
-                    if let childId = alert.childId, !alert.childName.isEmpty {
+                    if alert.childId != nil && !alert.childName.isEmpty {
                         VStack(alignment: .leading, spacing: 8) {
                             Label("Related Child", systemImage: "person.fill")
                                 .font(.headline)

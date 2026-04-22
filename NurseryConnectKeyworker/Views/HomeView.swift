@@ -61,9 +61,14 @@ struct HomeView: View {
     // MARK: - Welcome Section
     
     private var welcomeSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 12) {
+            // Brand header with logo
+            AppBrandHeader()
+
+            Divider()
+
             Text("Welcome back!")
-                .font(.title)
+                .font(.title2)
                 .bold()
             
             Text("You have \(viewModel.assignedChildren.count) assigned children today")
@@ -139,7 +144,7 @@ struct HomeView: View {
                 icon: "bell.fill",
                 trailing: {
                     NavigationLink {
-                        Text("Alerts View Placeholder")
+                        AlertsView()
                     } label: {
                         Text("View All")
                             .font(.subheadline)
@@ -168,7 +173,7 @@ struct HomeView: View {
                 icon: "book.fill",
                 trailing: {
                     NavigationLink {
-                        Text("Diary View Placeholder")
+                        DiaryView()
                     } label: {
                         Text("View All")
                             .font(.subheadline)
@@ -202,7 +207,7 @@ struct HomeView: View {
                 icon: "exclamationmark.triangle.fill",
                 trailing: {
                     NavigationLink {
-                        Text("Incidents View Placeholder")
+                        IncidentReportView()
                     } label: {
                         Text("View All")
                             .font(.subheadline)

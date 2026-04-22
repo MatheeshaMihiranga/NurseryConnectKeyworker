@@ -35,7 +35,7 @@ struct AlertBadge: View {
                         .font(.headline)
                         .foregroundStyle(.primary)
                     
-                    if let childId = alert.childId {
+                    if alert.childId != nil {
                         Text(alert.childName)
                             .font(.subheadline)
                             .foregroundStyle(.secondary)

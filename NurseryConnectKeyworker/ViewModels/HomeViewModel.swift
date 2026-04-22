@@ -38,9 +38,9 @@ class HomeViewModel {
             .sorted { $0.timestamp > $1.timestamp }
             .prefix(3))
         
-        // Get high-priority unacknowledged alerts
+        // Get high-priority unacknowledged alerts (includes critical, urgent, high)
         highPriorityAlerts = dataService.getAlerts()
-            .filter { ($0.priority == .high || $0.priority == .urgent) && !$0.isAcknowledged }
+            .filter { ($0.priority == .critical || $0.priority == .urgent || $0.priority == .high) && !$0.isAcknowledged }
             .sorted(by: AlertItem.sortByPriority)
         
         // Get pending incidents (not fully reviewed)
