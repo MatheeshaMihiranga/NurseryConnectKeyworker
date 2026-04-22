@@ -364,78 +364,87 @@ class SampleDataProvider {
         ]
     }
     
+    // MARK: - Object Caches
+    //
+    // CRITICAL: SwiftData @Model objects crash with SIGABRT (malloc: pointer being freed
+    // was not allocated) when ARC releases them without a ModelContext. Previously every
+    // call to getAlerts()/getDiaryEntries()/getIncidents() created BRAND NEW @Model objects.
+    // When a ViewModel called loadData() twice (e.g. after acknowledgeAlert), the first set
+    // of objects was released — triggering the SwiftData deinit crash.
+    //
+    // Fix: use private lazy vars so each @Model object is created exactly ONCE for the
+    // lifetime of SampleDataProvider.shared. The same instances are returned on every call.
+    //
+    private lazy var _diaryEntriesCache: [DiaryEntry]   = sampleDiaryEntries(for: sampleChildren)
+    private lazy var _incidentsCache: [IncidentReport]  = sampleIncidents(for: sampleChildren)
+    private lazy var _alertsCache: [AlertItem]          = sampleAlerts(for: sampleChildren)
+
     // MARK: - Helper Methods
-    
+
     var sampleDiaryEntries: [DiaryEntry] {
-        return sampleDiaryEntries(for: sampleChildren)
+        return _diaryEntriesCache
     }
-    
+
     var sampleIncidentReports: [IncidentReport] {
-        return sampleIncidents(for: sampleChildren)
+        return _incidentsCache
     }
-    
+
     var sampleAlerts: [AlertItem] {
-        return sampleAlerts(for: sampleChildren)
+        return _alertsCache
     }
-    
+
     func getChildren() -> [Child] {
         return sampleChildren
     }
-    
+
     func getAssignedChildren() -> [Child] {
         return sampleChildren
     }
-    
+
     func getDiaryEntries() -> [DiaryEntry] {
-        return sampleDiaryEntries(for: sampleChildren)
+        return _diaryEntriesCache
     }
-    
+
     func getDiaryEntries(for childId: UUID?) -> [DiaryEntry] {
-        let allEntries = sampleDiaryEntries(for: sampleChildren)
-        guard let childId = childId else {
-            return allEntries
-        }
-        return allEntries.filter { $0.childId == childId }
+        guard let childId = childId else { return _diaryEntriesCache }
+        return _diaryEntriesCache.filter { $0.childId == childId }
     }
-    
+
     func getIncidents() -> [IncidentReport] {
-        return sampleIncidents(for: sampleChildren)
+        return _incidentsCache
     }
-    
+
     func getIncidentReports(for childId: UUID?) -> [IncidentReport] {
-        let allIncidents = sampleIncidents(for: sampleChildren)
-        guard let childId = childId else {
-            return allIncidents
-        }
-        return allIncidents.filter { $0.childId == childId }
+        guard let childId = childId else { return _incidentsCache }
+        return _incidentsCache.filter { $0.childId == childId }
     }
-    
+
     func getAlerts() -> [AlertItem] {
-        return sampleAlerts(for: sampleChildren)
+        return _alertsCache
     }
-    
+
     func getUnacknowledgedAlerts() -> [AlertItem] {
-        return sampleAlerts(for: sampleChildren).filter { !$0.isAcknowledged }
+        return _alertsCache.filter { !$0.isAcknowledged }
     }
-    
+
     func getUnacknowledgedAlertCount() -> Int {
-        return sampleAlerts(for: sampleChildren).filter { !$0.isAcknowledged }.count
+        return _alertsCache.filter { !$0.isAcknowledged }.count
     }
-    
+
     func getPendingIncidentCount() -> Int {
-        return sampleIncidents(for: sampleChildren).filter { $0.isPending }.count
+        return _incidentsCache.filter { $0.isPending }.count
     }
-    
+
     func getTodaysDiaryEntries() -> [DiaryEntry] {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
-        return sampleDiaryEntries(for: sampleChildren).filter {
+        return _diaryEntriesCache.filter {
             calendar.isDate($0.timestamp, inSameDayAs: today)
         }
     }
-    
+
     func getHighPriorityAlerts() -> [AlertItem] {
-        return sampleAlerts(for: sampleChildren).filter {
+        return _alertsCache.filter {
             ($0.priority == .high || $0.priority == .urgent) && !$0.isAcknowledged
         }
     }
