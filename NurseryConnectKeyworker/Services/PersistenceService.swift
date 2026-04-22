@@ -12,14 +12,21 @@ import SwiftData
 @MainActor
 class PersistenceService {
     static let shared = PersistenceService()
-    
+
     // MARK: - Properties
-    
+
     private(set) var container: ModelContainer?
-    
+    private(set) var setupError: String?
+
     var mainContext: ModelContext {
         guard let container = container else {
-            fatalError("ModelContainer not initialized")
+            // Return a temporary in-memory container instead of crashing
+            let schema = Schema([Child.self, DiaryEntry.self, IncidentReport.self, AlertItem.self])
+            let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+            if let fallback = try? ModelContainer(for: schema, configurations: [config]) {
+                return fallback.mainContext
+            }
+            fatalError("Unable to create even a fallback in-memory ModelContainer")
         }
         return container.mainContext
     }
@@ -70,7 +77,14 @@ class PersistenceService {
             
         } catch {
             print("❌ Failed to initialize ModelContainer: \(error)")
-            fatalError("Could not create ModelContainer: \(error)")
+            setupError = "Storage setup failed: \(error.localizedDescription). Using temporary storage."
+            // Attempt an in-memory fallback so the app stays usable
+            let schema = Schema([Child.self, DiaryEntry.self, IncidentReport.self, AlertItem.self])
+            let fallbackConfig = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+            container = try? ModelContainer(for: schema, configurations: [fallbackConfig])
+            if container != nil {
+                print("⚠️ Falling back to in-memory storage")
+            }
         }
     }
     

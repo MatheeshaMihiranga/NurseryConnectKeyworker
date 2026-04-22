@@ -8,6 +8,8 @@
 
 /* Begin PBXFileReference section */
 		5AE5DCAD2F93F64C008B6BEF /* NurseryConnectKeyworker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NurseryConnectKeyworker.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		5AE5DD002F93F64C008B6BEF /* NurseryConnectKeyworkerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = NurseryConnectKeyworkerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		5AE5DD0A2F93F64C008B6BEF /* NurseryConnectKeyworkerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = NurseryConnectKeyworkerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -16,10 +18,34 @@
 			path = NurseryConnectKeyworker;
 			sourceTree = "<group>";
 		};
+		5AE5DD012F93F64C008B6BEF /* NurseryConnectKeyworkerTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = NurseryConnectKeyworkerTests;
+			sourceTree = "<group>";
+		};
+		5AE5DD0B2F93F64C008B6BEF /* NurseryConnectKeyworkerUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = NurseryConnectKeyworkerUITests;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		5AE5DCAA2F93F64C008B6BEF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		5AE5DD022F93F64C008B6BEF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		5AE5DD0C2F93F64C008B6BEF /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -41,6 +67,8 @@
 			isa = PBXGroup;
 			children = (
 				5AE5DCAD2F93F64C008B6BEF /* NurseryConnectKeyworker.app */,
+				5AE5DD002F93F64C008B6BEF /* NurseryConnectKeyworkerTests.xctest */,
+				5AE5DD0A2F93F64C008B6BEF /* NurseryConnectKeyworkerUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -70,6 +98,50 @@
 			productReference = 5AE5DCAD2F93F64C008B6BEF /* NurseryConnectKeyworker.app */;
 			productType = "com.apple.product-type.application";
 		};
+		5AE5DD062F93F64C008B6BEF /* NurseryConnectKeyworkerTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 5AE5DD092F93F64F008B6BEF /* Build configuration list for PBXNativeTarget "NurseryConnectKeyworkerTests" */;
+			buildPhases = (
+				5AE5DD032F93F64C008B6BEF /* Sources */,
+				5AE5DD022F93F64C008B6BEF /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				5AE5DD052F93F64C008B6BEF /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				5AE5DD012F93F64C008B6BEF /* NurseryConnectKeyworkerTests */,
+			);
+			name = NurseryConnectKeyworkerTests;
+			packageProductDependencies = (
+			);
+			productName = NurseryConnectKeyworkerTests;
+			productReference = 5AE5DD002F93F64C008B6BEF /* NurseryConnectKeyworkerTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		5AE5DD102F93F64C008B6BEF /* NurseryConnectKeyworkerUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 5AE5DD132F93F64F008B6BEF /* Build configuration list for PBXNativeTarget "NurseryConnectKeyworkerUITests" */;
+			buildPhases = (
+				5AE5DD0D2F93F64C008B6BEF /* Sources */,
+				5AE5DD0C2F93F64C008B6BEF /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				5AE5DD0F2F93F64C008B6BEF /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				5AE5DD0B2F93F64C008B6BEF /* NurseryConnectKeyworkerUITests */,
+			);
+			name = NurseryConnectKeyworkerUITests;
+			packageProductDependencies = (
+			);
+			productName = NurseryConnectKeyworkerUITests;
+			productReference = 5AE5DD0A2F93F64C008B6BEF /* NurseryConnectKeyworkerUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -82,6 +154,14 @@
 				TargetAttributes = {
 					5AE5DCAC2F93F64C008B6BEF = {
 						CreatedOnToolsVersion = 26.3;
+					};
+					5AE5DD062F93F64C008B6BEF = {
+						CreatedOnToolsVersion = 26.3;
+						TestTargetID = 5AE5DCAC2F93F64C008B6BEF;
+					};
+					5AE5DD102F93F64C008B6BEF = {
+						CreatedOnToolsVersion = 26.3;
+						TestTargetID = 5AE5DCAC2F93F64C008B6BEF;
 					};
 				};
 			};
@@ -100,6 +180,8 @@
 			projectRoot = "";
 			targets = (
 				5AE5DCAC2F93F64C008B6BEF /* NurseryConnectKeyworker */,
+				5AE5DD062F93F64C008B6BEF /* NurseryConnectKeyworkerTests */,
+				5AE5DD102F93F64C008B6BEF /* NurseryConnectKeyworkerUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -114,8 +196,52 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXContainerItemProxy section */
+		5AE5DD042F93F64C008B6BEF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 5AE5DCA52F93F64C008B6BEF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 5AE5DCAC2F93F64C008B6BEF;
+			remoteInfo = NurseryConnectKeyworker;
+		};
+		5AE5DD0E2F93F64C008B6BEF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 5AE5DCA52F93F64C008B6BEF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 5AE5DCAC2F93F64C008B6BEF;
+			remoteInfo = NurseryConnectKeyworker;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXTargetDependency section */
+		5AE5DD052F93F64C008B6BEF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 5AE5DCAC2F93F64C008B6BEF /* NurseryConnectKeyworker */;
+			targetProxy = 5AE5DD042F93F64C008B6BEF /* PBXContainerItemProxy */;
+		};
+		5AE5DD0F2F93F64C008B6BEF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 5AE5DCAC2F93F64C008B6BEF /* NurseryConnectKeyworker */;
+			targetProxy = 5AE5DD0E2F93F64C008B6BEF /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin PBXSourcesBuildPhase section */
 		5AE5DCA92F93F64C008B6BEF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		5AE5DD032F93F64C008B6BEF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		5AE5DD0D2F93F64C008B6BEF /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -310,6 +436,106 @@
 			};
 			name = Release;
 		};
+		5AE5DD072F93F64F008B6BEF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = CJ5AYMRF28;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nurseryconnect.NurseryConnectKeyworkerTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/NurseryConnectKeyworker.app/NurseryConnectKeyworker";
+			};
+			name = Debug;
+		};
+		5AE5DD082F93F64F008B6BEF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = CJ5AYMRF28;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nurseryconnect.NurseryConnectKeyworkerTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/NurseryConnectKeyworker.app/NurseryConnectKeyworker";
+			};
+			name = Release;
+		};
+		5AE5DD112F93F64F008B6BEF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = CJ5AYMRF28;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nurseryconnect.NurseryConnectKeyworkerUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = NurseryConnectKeyworker;
+			};
+			name = Debug;
+		};
+		5AE5DD122F93F64F008B6BEF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = CJ5AYMRF28;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nurseryconnect.NurseryConnectKeyworkerUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = NurseryConnectKeyworker;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -327,6 +553,24 @@
 			buildConfigurations = (
 				5AE5DCBB2F93F64F008B6BEF /* Debug */,
 				5AE5DCBC2F93F64F008B6BEF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		5AE5DD092F93F64F008B6BEF /* Build configuration list for PBXNativeTarget "NurseryConnectKeyworkerTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5AE5DD072F93F64F008B6BEF /* Debug */,
+				5AE5DD082F93F64F008B6BEF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		5AE5DD132F93F64F008B6BEF /* Build configuration list for PBXNativeTarget "NurseryConnectKeyworkerUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5AE5DD112F93F64F008B6BEF /* Debug */,
+				5AE5DD122F93F64F008B6BEF /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

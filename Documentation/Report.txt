@@ -1,0 +1,257 @@
+SE4020 – Mobile Application Design and Development
+NurseryConnect Keyworker iOS App — Development Report
+================================================================
+
+Chosen User Role: Keyworker (Key Person)
+Selected Features:
+  1. Daily Diary (Child Care Logging)
+  2. Incident Reporting (Safeguarding)
+
+================================================================
+1. FEATURE SELECTION & ROLE JUSTIFICATION
+================================================================
+
+Role: Keyworker
+---------------
+Under the EYFS 2024 framework, every child attending a registered setting must be
+assigned a Key Person. The keyworker is responsible for building a relationship with
+the child and their family, observing and tracking development, and escalating any
+welfare concerns. This role was selected because it sits at the centre of daily
+operational activity: all observations, care logs, and incident records flow through
+the keyworker. It therefore provides the richest set of features to implement as an MVP.
+
+Feature 1 – Daily Diary (Child Care Logging)
+---------------------------------------------
+Daily observation records are a statutory requirement under EYFS 2024 and are
+routinely inspected by Ofsted as evidence of individual care. The feature allows a
+keyworker to log meal portions, nap durations, activity descriptions, mood ratings
+(1–5 scale), and nappy/toilet changes for each assigned child. These cover all
+standard observation categories a key person would complete in a typical nursery day.
+
+Justification for MVP scope:
+- Directly addresses the primary day-to-day duty of a keyworker.
+- Rich enough in entry types (five DiaryEntryType values) to require meaningful
+  data modelling and UI complexity.
+- The four-week estimate is realistic: week 1 = model/persistence, week 2 = list
+  view with grouping and filtering, week 3 = entry creation form with validation,
+  week 4 = polish, accessibility, and testing.
+
+Feature 2 – Incident Reporting (Safeguarding)
+----------------------------------------------
+Under the Children Act 1989 and the Safeguarding and Welfare Requirements of
+EYFS 2024, settings must maintain written records of any accidents, injuries, or
+safeguarding concerns, with timestamps, witness names, immediate action taken, and
+evidence that parents and managers were informed. This feature directly models that
+statutory audit trail.
+
+Justification for MVP scope:
+- Complements the daily diary: both involve logging child observations, but incident
+  reports carry additional legal weight and require a more structured multi-step form.
+- Seven incident categories (Injury, Illness, Behaviour, Accident, Allergic Reaction,
+  Safeguarding, Other) and four severity levels provide meaningful complexity.
+- The parent-notified and manager-reviewed fields create a real-world workflow that
+  demonstrates state management and list sectioning.
+- Four-week estimate: week 1 = model with full required fields, week 2 = list view
+  with severity-coloured cards and pending/complete sections, week 3 = creation form
+  with safeguarding warnings, week 4 = polish and testing.
+
+Why these two features complement each other:
+Both are record-keeping duties that a keyworker performs daily. The Daily Diary covers
+routine positive care evidence; Incident Reports cover exception events. Together they
+represent a complete picture of the keyworker's documentation responsibilities. The
+shared child model, the My Children screen as a navigation hub, and the Home Dashboard
+that aggregates both feeds create a coherent single-role experience with clear
+information hierarchy.
+
+================================================================
+2. DESIGN CHOICES
+================================================================
+
+Architecture: MVVM
+-------------------
+The app follows the Model–View–ViewModel pattern throughout:
+- Models (Child, DiaryEntry, IncidentReport, AlertItem) are pure SwiftData @Model
+  classes. They define the data schema and carry computed properties (e.g.,
+  isPending, hasAllergies, moodEmoji) that belong to the domain layer, not the UI.
+- ViewModels (HomeViewModel, ChildrenViewModel, DiaryViewModel, IncidentViewModel,
+  AlertsViewModel) are @Observable classes that hold filtered/sorted derived state
+  and expose methods for the View to call. They communicate with the DataService
+  layer, not directly with persistence.
+- Views are stateless except for local UI state (@State). They bind to ViewModels
+  and render based on their published properties.
+
+This separation means any View can be replaced or reused without touching business
+logic, and ViewModels can be unit-tested independently of SwiftUI.
+
+Persistence: SwiftData
+-----------------------
+SwiftData (iOS 17+) was chosen over CoreData or UserDefaults because:
+- It is type-safe and works natively with Swift value types and enums.
+- The @Model macro and @Query property wrapper integrate directly with SwiftUI,
+  eliminating boilerplate fetch request code.
+- Model configuration supports isStoredInMemoryOnly = true for testing contexts.
+- No CloudKit sync is configured (cloudKitDatabase: .none). This is a deliberate
+  GDPR-aligned decision: child data should remain on the device under institutional
+  control and must not flow to third-party cloud services without a Data Processing
+  Agreement and explicit consent.
+
+A two-layer service architecture wraps SwiftData:
+- PersistenceService owns the ModelContainer and raw fetch/save operations.
+- DataService adds business logic (filtering by keyworker, overdue detection,
+  alert generation) and a useSampleData toggle that bypasses the database entirely
+  for UI previews and unit tests.
+
+Error Handling
+--------------
+The PersistenceService.setupContainer() method previously called fatalError() if
+ModelContainer initialisation failed. This was replaced with:
+1. A graceful fallen-back to an in-memory container, so the app remains usable.
+2. A user-visible StorageWarningBanner displayed at the top of the screen if the
+   persistent store could not be opened.
+3. A StorageErrorView shown only if even the fallback container cannot be created
+   (an extreme edge case, e.g., critically low device storage).
+
+Form Validation
+---------------
+Both AddDiaryEntryView and IncidentReportFormView validate required fields before
+enabling the Save/Submit button (isFormValid computed property). If validation fails,
+an alert displays a descriptive error message. This prevents empty or incomplete
+records from being stored, which would be meaningless in a professional care context.
+
+Navigation
+----------
+A TabView root provides fast access to all five main screens. Within each tab a
+NavigationStack supports drill-down navigation. Sheet modals are used for creation
+forms so the context (the list being added to) remains visible on dismissal.
+This matches the standard iOS HIG pattern for list + detail + creation.
+
+Accessibility
+-------------
+All interactive components carry accessibilityLabel and accessibilityHint.
+Images use accessibilityHidden(true) where purely decorative. Boolean state is
+communicated via accessibilityAddTraits. The Alerts tab badge uses a dynamic
+accessibility label that reads the unread count aloud. This ensures the app is
+usable with VoiceOver, which is important for staff with disabilities working in
+a professional environment.
+
+================================================================
+3. UI/UX DESIGN
+================================================================
+
+Visual Design
+-------------
+The colour palette is reserved and professional:
+- Blue: primary interactive elements and diary entries (calm, trustworthy).
+- Red: critical alerts and major incidents (urgency without alarm).
+- Orange: pending items requiring action.
+- Yellow: moderate severity and overdue logs (caution).
+- Green: confirmed/safe states (parent notified, all eaten).
+- Purple: mood/wellbeing entries.
+
+Cards use a consistent corner radius of 12pt, a subtle shadow, and a coloured left
+border or stroke that encodes the category at a glance. This allows a busy keyworker
+to scan a list and identify priority items without reading every label.
+
+Typography follows Apple's Dynamic Type system. System fonts are used throughout to
+respect the user's accessibility size preference.
+
+Usability
+---------
+The My Children screen surfaces allergy, dietary, and medical badges directly on
+each child card. These are the most safety-critical pieces of information a
+keyworker needs in real time (e.g., before a meal). Displaying them prominently
+without requiring navigation reduces the risk of an allergic reaction.
+
+Quick Action Buttons on each child card allow a keyworker to start logging a meal,
+nap, or mood in one tap from the children overview, pre-populating the child and
+type in the diary entry form. This reduces friction for the highest-frequency tasks.
+
+Swipe-to-approve on incident cards allows "Mark Reviewed" in single swipe, which
+is faster than opening a detail screen, appropriate for a known-safe action.
+
+Animations
+----------
+Four categories of animation enhance the professional feel without being distracting:
+1. Staggered spring entry for Home Dashboard stat cards (0ms/80ms/160ms/240ms delay).
+   Gives the impression the dashboard is loading data rather than appearing all at once.
+2. Pulse animation on the unread indicator dot in AlertBadge, drawing attention to
+   unseen alerts without being aggressive.
+3. Asymmetric push/fade transition on My Children list items when the search query
+   changes, providing spatial consistency.
+4. Spring animation on Diary filter chip selection, giving immediate tactile feedback.
+
+================================================================
+4. IMPLEMENTATION DECISIONS
+================================================================
+
+SwiftData @Model vs CoreData NSManagedObject
+--------------------------------------------
+SwiftData @Model classes can be instantiated as plain objects without a ModelContext.
+This was exploited in the SampleDataProvider and the DataService.useSampleData path:
+sample objects are created at runtime and returned directly to ViewModels without
+touching the persistent store. This allows SwiftUI previews and unit tests to use
+realistic data without requiring a database.
+
+Enum storage as raw String
+--------------------------
+SwiftData does not natively codify Swift enums. Each enum field is backed by a String
+stored property (entryTypeRaw, severityRaw, etc.) with a computed property that
+converts to/from the enum using rawValue. A default fallback (e.g., ?? .activity)
+prevents nil crashes if an unrecognised value is encountered in an existing database,
+providing forward compatibility.
+
+@Observable vs ObservableObject
+--------------------------------
+The Swift 5.9 Observation framework (@Observable) was chosen over the older
+ObservableObject/@Published pattern. @Observable eliminates the need for
+@StateObject, @ObservedObject, and @EnvironmentObject in most cases, replacing them
+with @State in the View. The framework tracks only accessed properties rather than
+all properties, reducing unnecessary View re-renders — important for a list-heavy app.
+
+No Login Screen
+---------------
+As required by the assignment brief, authentication is excluded. In a production
+system, access would be controlled by the setting's identity provider (e.g., Microsoft
+Entra ID or a bespoke nursery management system). The current app hard-codes the
+keyworker as "Sarah Jones" via SampleDataProvider.currentKeyworkerName for
+demonstration purposes.
+
+================================================================
+5. CHALLENGES
+================================================================
+
+Challenge 1 – SwiftData enum storage
+--------------------------------------
+SwiftData's @Model macro does not support enum properties directly; attempting to
+declare var entryType: DiaryEntryType as a stored property caused a compiler error.
+The solution was to store the raw String value and expose the enum via a computed
+property, which is a documented SwiftData pattern. This also required writing
+convenience initialisers for compatibility with calling code that passed the enum
+directly.
+
+Challenge 2 – @MainActor global isolation and concurrency
+----------------------------------------------------------
+The project uses SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor, making all types
+implicitly @MainActor. This caused issues in async methods — specifically, calling
+await dataService.someMethod() inside a Task {} block from a ViewModel that is
+already @MainActor was safe, but required careful use of await MainActor.run {} in
+refreshData() methods to dispatch UI updates correctly. Without this, Xcode emitted
+warnings about actors crossing isolation boundaries.
+
+Challenge 3 – View layering for conditional sections
+----------------------------------------------------
+HomeView shows or hides sections (Critical Alerts, Pending Incidents, Overdue
+Warnings) based on ViewModel state. Initially these were conditional statements in
+the ScrollView, which did not animate smoothly when state changed after a refresh.
+Adding .animation(.spring, value: someCount) on the parent VStack resolved this,
+but required ensuring that the conditional logic used consistent identity (id: \.id
+on ForEach) to allow SwiftUI to diff the list correctly rather than rebuilding
+all views.
+
+Challenge 4 – Unit testing @Observable ViewModels
+---------------------------------------------------
+@Observable ViewModels cannot easily be mocked without protocol abstraction. The
+pragmatic solution was to set DataService.shared.useSampleData = true in test setUp,
+which causes all DataService methods to return SampleDataProvider data without
+touching SwiftData. This meant ViewModels could be instantiated in tests and their
+computed filtering properties tested directly with predictable inputs.

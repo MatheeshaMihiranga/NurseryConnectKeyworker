@@ -1,0 +1,273 @@
+SE4020 – Mobile Application Design and Development
+NurseryConnect Keyworker iOS App — Regulatory Compliance Report
+================================================================
+
+Chosen Role: Keyworker
+Features: Daily Diary & Incident Reporting
+Student Note: This report explains the regulatory obligations applicable to
+NurseryConnect, how the iOS app's architecture and design decisions reflect those
+obligations, and what a full production system would need to implement for complete
+legal compliance.
+
+================================================================
+1. APPLICABLE REGULATIONS AND KEY OBLIGATIONS
+================================================================
+
+1.1 UK General Data Protection Regulation (UK GDPR)
+----------------------------------------------------
+The UK GDPR (retained from EU GDPR post-Brexit, supplemented by the Data Protection
+Act 2018) governs the processing of personal data. For NurseryConnect, the relevant
+data subjects are children (special category data — Article 9), their parents and
+guardians, and nursery staff.
+
+Key obligations:
+- Lawful basis (Article 6): Processing child records is lawful under "legitimate
+  interests" for contractual obligations but requires explicit consent or the
+  "vital interests" basis for special category health/medical data.
+- Data minimisation (Article 5(1)(c)): Only collect the minimum personal data
+  needed. Diary entries should not record more than is required for EYFS compliance.
+- Storage limitation (Article 5(1)(e)): Child records must not be kept longer than
+  necessary. EYFS guidance suggests records are kept for at least the duration of
+  attendance; some safeguarding records for longer.
+- Integrity and confidentiality (Article 5(1)(f)): Personal data must be protected
+  against unauthorised access. On-device storage without cloud sync reduces
+  exposure to third-party breaches.
+- Right of access (Article 15): Parents have the right to request their child's
+  personal data. A production system must provide a data export mechanism.
+- Data breach notification (Article 33): If the device is lost or compromised, the
+  Data Controller (the nursery) must notify the ICO within 72 hours.
+
+1.2 Early Years Foundation Stage (EYFS) 2024
+---------------------------------------------
+The EYFS statutory framework (most recent revision September 2024) mandates:
+- Key Person: Each child must have a named key person who helps the child settle and
+  forms a relationship with their parents. The key person is responsible for
+  maintaining the child's records.
+- Learning and Care Records: Settings must maintain records of each child's
+  development and welfare. While the format is not prescribed, the records must
+  support the learning journey and inform planning.
+- Safeguarding: Settings must have clear procedures to safeguard and promote the
+  welfare of children. Staff must know how to recognise and report concerns.
+- Health: Settings must maintain records of medical conditions, allergies, and
+  dietary requirements. Staff must be appropriately trained and records must be
+  accessible to all relevant staff when the child is present.
+- Medication: If a child requires medication, written parental consent is required,
+  and a record must be kept of medication given.
+
+1.3 Children Act 1989 and 2004
+-------------------------------
+The Children Act establishes the legal framework for child protection in England:
+- Section 47 duty: Local authorities must investigate where they have reasonable cause
+  to suspect a child in their area is suffering or is likely to suffer significant harm.
+  Nursery staff are "mandated reporters" who must refer concerns to LADO/MASH.
+- Written records: When a safeguarding concern is raised, a contemporaneous written
+  record must be made immediately. Records must be factual, objective, and timed.
+  They should not contain opinion or speculation.
+- Confidentiality: Information should be shared on a "need to know" basis. Disclosures
+  should not be shared unnecessarily, but confidentiality must not be a barrier to
+  protecting a child.
+
+1.4 Ofsted Inspection Framework (EIF)
+--------------------------------------
+Ofsted inspects registered settings under the Education Inspection Framework:
+- Evidence of children's wellbeing: Inspectors will look for evidence that individual
+  children's emotional and physical needs are being met. Daily diary records provide
+  this evidence.
+- Accident and incident records: Inspectors may review incident logs to ensure
+  accidents are recorded correctly, parents are informed, and proper follow-up
+  occurs. The signature structure (parent notified, manager reviewed) is specifically
+  expected.
+- Safeguarding records: Inspectors scrutinise how concerns are documented and
+  how the setting's designated safeguarding lead (DSL) tracks and escalates issues.
+- Record-keeping: The absence of adequate records, or records that appear incomplete
+  or retrospective, is treated as a serious judgement failure.
+
+1.5 Food Standards Agency (FSA) Allergen Regulations
+-----------------------------------------------------
+Natasha's Law (Food Information (Amendment) (England) Regulations 2021) and the
+FSA's allergen guidance require:
+- Full ingredient labelling for all food prepared on site.
+- Settings must maintain records of each child's allergies and dietary requirements.
+- Food allergies must be communicated to all staff who handle or serve food to
+  that child.
+- Cross-contamination procedures must be in place for the 14 major allergens
+  (including peanuts, tree nuts, milk/dairy, eggs, sesame, etc.).
+
+================================================================
+2. HOW THE iOS APP REFLECTS REGULATORY REQUIREMENTS
+================================================================
+
+2.1 UK GDPR — Data Minimisation and Local-Only Storage
+-------------------------------------------------------
+Design decision: cloudKitDatabase: .none in PersistenceService.
+The ModelConfiguration explicitly disables iCloud/CloudKit synchronisation. This
+keeps all personal child data on the device under the nursery's direct control,
+rather than flowing to Apple's cloud infrastructure. A full production system would
+additionally require:
+- Device-level encryption (iOS provides this when a passcode is set; the app can
+  enforce this through UIRequiredDeviceCapabilities).
+- App-level authentication (PIN or biometric) to prevent unauthorised access if
+  the device is unlocked.
+- A GDPR-compliant data export feature (CSV or PDF of a child's records).
+- A data deletion flow that removes all records for a child when they leave.
+
+The data modelled in the Child entity (name, age, room, allergies, dietary
+restrictions, medical notes, emergency contact) represents the minimum required
+for a keyworker to fulfil their EYFS duty of care during the session. No
+unnecessary personal data (e.g., passport numbers, photographs, home addresses)
+is captured, satisfying the data minimisation principle.
+
+2.2 EYFS 2024 — Key Person and Daily Observations
+--------------------------------------------------
+Design decision: All Child records carry a keyworkerName field, and DataService
+filters children to return only those assigned to the current keyworker.
+This reflects the EYFS requirement that each child has a designated key person:
+the app only shows the keyworker's own assigned children, preventing one keyworker
+from inadvertently editing another's records (a risk in a shared-device environment).
+
+The five DiaryEntryType values (Meal, Nap, Activity, Mood/Wellbeing, Nappy/Toilet)
+map directly to the categories recommended in EYFS guidance for daily welfare
+observations. The structured entry format (title, description, portion size, duration,
+mood rating) provides sufficient richness to serve as a contemporaneous care record.
+
+The staffName field on DiaryEntry records who made each entry, creating a basic
+audit trail. In a production system, this would be populated from the authenticated
+user's identity rather than hard-coded.
+
+2.3 Children Act 1989 — Safeguarding Incident Records
+------------------------------------------------------
+Design decision: IncidentReport model includes timestamp, location, description,
+immediateActionTaken, witnessNames, parentNotified + parentNotificationTime,
+managerReviewed + managerReviewTime, reportedByStaff.
+
+This structure mirrors the fields required by statutory guidance Working Together
+to Safeguard Children 2023:
+- The timestamp creates a contemporaneous record, which is legally significant.
+- witnessNames satisfies the requirement to record who was present.
+- parentNotified and managerReviewed with their associated Date fields create an
+  audit trail showing the nursery fulfilled its duty to inform relevant parties.
+- The category field includes "Safeguarding Concern" as a distinct incident type,
+  signalling to users when a higher escalation path (LADO, MASH) applies.
+- requiresUrgentAction (true for Major/Serious severity) is used to auto-generate
+  an alert in DataService, prompting the keyworker to escalate immediately.
+
+In a production system, safeguarding concern records would be:
+- Automatically escalated to the Designated Safeguarding Lead.
+- Lock-protected so they cannot be edited after a set period (auditable immutability).
+- Exported to the setting's Multi-Agency Safeguarding Hub (MASH) referral system.
+
+2.4 Ofsted — Audit Trail and Evidence
+--------------------------------------
+Design decision: Status badges (Parent Notified ✓ / Pending) on IncidentCard are
+actionable — tapping them marks the step complete with a timestamp.
+This provides a clear, timestamped audit trail that an Ofsted inspector would
+expect to see. The "Pending Review" section on the incident list ensures no report
+is accidentally left without parent notification or manager sign-off.
+
+The Daily Diary groups entries by date and supports search and filter, making
+it straightforward for a setting manager or inspector to retrieve all records
+for a specific child or a specific date range — a routine requirement during
+an Ofsted deep-dive.
+
+2.5 FSA — Allergy and Dietary Visibility
+-----------------------------------------
+Design decision: Allergy badges (red) and dietary restriction badges (orange) are
+displayed prominently on every ChildCard in the My Children list, and flagged as
+AlertItem records with .allergy and .dietary alert types.
+
+This design decision ensures that allergy information is always visible before a
+keyworker interacts with a child, reducing the risk of accidental exposure. The
+red badge colour follows the universal convention for danger/allergy warnings.
+
+The DiaryEntry model includes a portionSize field for meal entries, which supports
+FSA-aligned record-keeping of what a child actually ate — important both for
+allergy tracking and for reporting to parents.
+
+In a production system, allergy alerting would additionally:
+- Integrate with the catering system to flag incompatible meals before service.
+- Send a push notification to all staff supervising the child during meal times.
+- Generate an FSA-compliant written report if a suspected allergic reaction occurs.
+
+================================================================
+3. COMPLIANCE BY DESIGN — WHAT A PRODUCTION SYSTEM WOULD REQUIRE
+================================================================
+
+Area: Authentication & Access Control
+- Multi-factor authentication for all staff logins.
+- Role-based access control: keyworkers see only their assigned children; managers
+  see all records; DSLs see safeguarding concerns.
+- Automatic session timeout after inactivity.
+- Audit logging of all login events and data access.
+
+Area: UK GDPR Full Compliance
+- Privacy Notice displayed at first use, explaining what data is collected and why.
+- Consent management for data sharing with third parties.
+- Subject Access Request (SAR) workflow: a parent can request all data held on
+  their child and receive it within 30 days.
+- Automated data retention and deletion policy: records automatically flagged for
+  review/deletion after a configurable retention period.
+- Data Protection Impact Assessment (DPIA) completed before deployment.
+- ICO registration and appointing a Data Protection Officer (DPO).
+
+Area: EYFS 2024 Full Compliance
+- Progress check at age 2: a formal, structured observation report that cannot be
+  completed by the diary alone.
+- Two-year progress check integration with health visitors.
+- Learning journey with tracked developmental next steps using EYFS Development
+  Matters milestones.
+- Parental engagement portal allowing parents to view and comment on observations.
+
+Area: Safeguarding (Children Act / KCSIE)
+- Designated Safeguarding Lead (DSL) alert for any category=Safeguarding entry.
+- LADO (Local Authority Designated Officer) referral workflow.
+- Chronology view: all concerns for a child in date order for a safeguarding
+  review meeting.
+- Immutable records: once submitted, concern records cannot be edited — only
+  appended to.
+
+Area: Information Security (Cyber Essentials / NHS DSP Toolkit equivalent)
+- TLS 1.3 for all network communication.
+- Encrypted local SQLite database (SQLCipher or iOS Data Protection Class A).
+- Remote wipe capability via Mobile Device Management (MDM) for lost devices.
+- Penetration testing before production deployment.
+
+================================================================
+4. TENSIONS, TRADE-OFFS AND CRITICAL ANALYSIS
+================================================================
+
+Tension 1: Usability vs. Data Minimisation (UK GDPR)
+------------------------------------------------------
+UK GDPR requires collecting only what is necessary. However, the more structured
+and detailed a diary entry is, the more useful it is as evidence for Ofsted and
+EYFS compliance. The app resolves this tension by making fields like 'notes' and
+advanced meal detail optional, while requiring the minimum (type, title, description,
+child) that makes a record meaningful. In a production system, this balance would
+be formally documented in the DPIA.
+
+Tension 2: Accessibility of Allergy Information vs. Confidentiality (UK GDPR)
+-------------------------------------------------------------------------------
+Allergy and medical information must be visible to ALL staff supervising a child
+(EYFS requirement) but is also special-category health data under UK GDPR (Article 9).
+The app resolves this for the MVP by showing it to the authenticated keyworker.
+A production system would need policy controls specifying exactly which roles can
+see each type of medical data, with an audit trail of who viewed it and when.
+
+Tension 3: Contemporaneous Records vs. Offline Capability
+----------------------------------------------------------
+EYFS and the Children Act value promptly-recorded observations. A cloud-dependent
+system that requires network access to submit records would fail this requirement
+when connectivity is lost (e.g., in an outdoor play area). The local-first SwiftData
+approach means records are always written immediately to the device and synced later.
+However, this creates a risk of data loss if the device fails before sync. A
+production system would require offline-first architecture with background sync and
+conflict resolution.
+
+Tension 4: No Login Screen (MVP) vs. GDPR Access Control
+---------------------------------------------------------
+As mandated by the assignment brief, the app launches directly into functionality
+without authentication. This is explicitly not compliant with UK GDPR's integrity
+and confidentiality principle — any person with physical access to the device could
+view sensitive child data. This trade-off is acceptable for an academic MVP where
+the device is assumed to be the student's personal development device. Any deployment
+to a real nursery would require authentication to be the first feature implemented,
+ahead of all others.

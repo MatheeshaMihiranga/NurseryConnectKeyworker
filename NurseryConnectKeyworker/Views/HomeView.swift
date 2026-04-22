@@ -12,7 +12,8 @@ struct HomeView: View {
     @State private var viewModel = HomeViewModel()
     @State private var showAllAlerts = false
     @State private var showAllEntries = false
-    
+    @State private var statsVisible = false
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -49,6 +50,9 @@ struct HomeView: View {
             }
             .onAppear {
                 viewModel.loadDashboardData()
+                withAnimation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.1)) {
+                    statsVisible = true
+                }
             }
             .accessibilityLabel("Home dashboard with overview of assigned children, alerts, and recent entries")
         }
@@ -87,27 +91,39 @@ struct HomeView: View {
                     value: "\(viewModel.recentDiaryEntries.count)",
                     color: .blue
                 )
-                
+                .opacity(statsVisible ? 1 : 0)
+                .scaleEffect(statsVisible ? 1 : 0.85)
+                .animation(.spring(response: 0.5, dampingFraction: 0.7).delay(0.0), value: statsVisible)
+
                 StatCard(
                     icon: "exclamationmark.triangle.fill",
                     title: "Pending Incidents",
                     value: "\(viewModel.pendingIncidents.count)",
                     color: .orange
                 )
-                
+                .opacity(statsVisible ? 1 : 0)
+                .scaleEffect(statsVisible ? 1 : 0.85)
+                .animation(.spring(response: 0.5, dampingFraction: 0.7).delay(0.08), value: statsVisible)
+
                 StatCard(
                     icon: "bell.fill",
                     title: "Critical Alerts",
                     value: "\(viewModel.criticalAlerts.count)",
                     color: .red
                 )
-                
+                .opacity(statsVisible ? 1 : 0)
+                .scaleEffect(statsVisible ? 1 : 0.85)
+                .animation(.spring(response: 0.5, dampingFraction: 0.7).delay(0.16), value: statsVisible)
+
                 StatCard(
                     icon: "clock.fill",
                     title: "Overdue Logs",
                     value: "\(viewModel.overdueCount)",
                     color: viewModel.overdueCount > 0 ? .yellow : .green
                 )
+                .opacity(statsVisible ? 1 : 0)
+                .scaleEffect(statsVisible ? 1 : 0.85)
+                .animation(.spring(response: 0.5, dampingFraction: 0.7).delay(0.24), value: statsVisible)
             }
         }
         .accessibilityElement(children: .contain)

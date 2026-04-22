@@ -12,7 +12,10 @@ struct AlertBadge: View {
     let alert: AlertItem
     let onAcknowledge: () -> Void
     let onDismiss: () -> Void
-    
+
+    @State private var isPulsing = false
+    @State private var isVisible = false
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             // Header with priority indicator
@@ -49,6 +52,12 @@ struct AlertBadge: View {
                     Circle()
                         .fill(.blue)
                         .frame(width: 10, height: 10)
+                        .scaleEffect(isPulsing ? 1.4 : 1.0)
+                        .opacity(isPulsing ? 0.5 : 1.0)
+                        .animation(
+                            .easeInOut(duration: 0.9).repeatForever(autoreverses: true),
+                            value: isPulsing
+                        )
                         .accessibilityLabel("Unacknowledged")
                 }
             }
@@ -98,6 +107,7 @@ struct AlertBadge: View {
                         .background(.blue)
                         .cornerRadius(8)
                     }
+                    .buttonStyle(BounceButtonStyle())
                     
                     Button(action: onDismiss) {
                         Image(systemName: "xmark")
@@ -122,6 +132,17 @@ struct AlertBadge: View {
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilityText)
         .accessibilityHint(alert.isAcknowledged ? "" : "Double tap acknowledge button to mark as read")
+        .opacity(isVisible ? 1 : 0)
+        .offset(y: isVisible ? 0 : 12)
+        .animation(.spring(response: 0.45, dampingFraction: 0.8), value: isVisible)
+        .onAppear {
+            withAnimation {
+                isVisible = true
+            }
+            if !alert.isAcknowledged {
+                isPulsing = true
+            }
+        }
     }
     
     private var priorityColor: Color {
@@ -142,5 +163,15 @@ struct AlertBadge: View {
         text += "\(alert.relativeTime). "
         text += alert.isAcknowledged ? "Acknowledged." : "Not acknowledged."
         return text
+    }
+}
+
+// MARK: - Bounce Button Style
+
+struct BounceButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.94 : 1.0)
+            .animation(.spring(response: 0.2, dampingFraction: 0.6), value: configuration.isPressed)
     }
 }

@@ -18,14 +18,25 @@ struct NurseryConnectKeyworkerApp: App {
     }
     
     // MARK: - Body
-    
+
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .modelContainer(PersistenceService.shared.container!)
-                .onAppear {
-                    configureAccessibility()
+            Group {
+                if let container = PersistenceService.shared.container {
+                    ContentView()
+                        .modelContainer(container)
+                        .overlay(alignment: .top) {
+                            if let errorMessage = PersistenceService.shared.setupError {
+                                StorageWarningBanner(message: errorMessage)
+                            }
+                        }
+                } else {
+                    StorageErrorView()
                 }
+            }
+            .onAppear {
+                configureAccessibility()
+            }
         }
     }
     
@@ -46,9 +57,65 @@ struct NurseryConnectKeyworkerApp: App {
     private func configureAccessibility() {
         // Configure minimum Dynamic Type size for accessibility
         // This ensures text is readable while maintaining layout integrity
-        
+
         // Note: Individual views handle Dynamic Type with .dynamicTypeSize() modifier
-        
+
         print("♿️ Accessibility configured")
+    }
+}
+
+// MARK: - Storage Warning Banner
+
+struct StorageWarningBanner: View {
+    let message: String
+    @State private var isDismissed = false
+
+    var body: some View {
+        if !isDismissed {
+            HStack(spacing: 12) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .foregroundStyle(.yellow)
+                Text(message)
+                    .font(.caption)
+                    .foregroundStyle(.white)
+                    .lineLimit(2)
+                Spacer()
+                Button {
+                    withAnimation { isDismissed = true }
+                } label: {
+                    Image(systemName: "xmark")
+                        .foregroundStyle(.white)
+                }
+            }
+            .padding(.horizontal)
+            .padding(.vertical, 8)
+            .background(Color.orange)
+            .transition(.push(from: .top))
+            .accessibilityLabel("Storage warning: \(message)")
+        }
+    }
+}
+
+// MARK: - Storage Error View
+
+struct StorageErrorView: View {
+    var body: some View {
+        VStack(spacing: 24) {
+            Image(systemName: "externaldrive.badge.exclamationmark")
+                .font(.system(size: 64))
+                .foregroundStyle(.red)
+
+            Text("Unable to Start")
+                .font(.title)
+                .bold()
+
+            Text("The app could not initialise its local storage. Please restart the app or contact support.")
+                .font(.body)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .accessibilityLabel("Storage error. App cannot start.")
     }
 }

@@ -82,7 +82,9 @@ struct DiaryView: View {
                         title: type.rawValue.capitalized,
                         isSelected: viewModel.selectedEntryType == type
                     ) {
-                        viewModel.selectedEntryType = type
+                        withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
+                            viewModel.selectedEntryType = type
+                        }
                     }
                 }
             }
