@@ -49,7 +49,7 @@ struct MyChildrenView: View {
                     }
                 }
                 .padding()
-            .animation(.spring(response: 0.4, dampingFraction: 0.75), value: viewModel.searchText)
+            }
             .navigationTitle("My Children")
             .searchable(
                 text: $viewModel.searchText,
