@@ -7,69 +7,99 @@
 //
 
 import Foundation
+import SwiftData
 
 class SampleDataProvider {
     static let shared = SampleDataProvider()
-    
-    private init() {}
+
+    // MARK: - In-Memory ModelContainer
+    //
+    // SwiftData @Model objects MUST live inside a ModelContext.
+    // Without one, Swift ARC and SwiftData's internal allocator use
+    // different memory regions. When ARC calls free() during deinit,
+    // the pointer was allocated by SwiftData's allocator, not malloc,
+    // causing: "malloc: pointer being freed was not allocated" SIGABRT.
+    //
+    // Every @Model object is inserted into this in-memory context
+    // immediately after creation. The context then owns the objects
+    // and their lifecycle is safe.
+    //
+    private let _modelContainer: ModelContainer
+    private let _modelContext: ModelContext
+
+    private init() {
+        let schema = Schema([
+            Child.self,
+            DiaryEntry.self,
+            IncidentReport.self,
+            AlertItem.self
+        ])
+        let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+        _modelContainer = try! ModelContainer(for: schema, configurations: [config])
+        _modelContext = ModelContext(_modelContainer)
+    }
     
     // MARK: - Current Keyworker
     
     let currentKeyworkerName = "Sarah Jones"
     
     // MARK: - Sample Children
-    
-    lazy var sampleChildren: [Child] = [
-        Child(
-            name: "Oliver Taylor",
-            age: 3,
-            room: "Toddlers",
-            allergies: ["Peanuts", "Tree nuts"],
-            dietaryRestrictions: [],
-            medicalNotes: "",
-            photoName: "person.circle.fill",
-            keyworkerName: currentKeyworkerName,
-            emergencyContact: "James Taylor",
-            emergencyPhone: "07700 900123"
-        ),
-        Child(
-            name: "Emma Wilson",
-            age: 2,
-            room: "Toddlers",
-            allergies: [],
-            dietaryRestrictions: ["Dairy free"],
-            medicalNotes: "",
-            photoName: "person.circle.fill",
-            keyworkerName: currentKeyworkerName,
-            emergencyContact: "Sophie Wilson",
-            emergencyPhone: "07700 900456"
-        ),
-        Child(
-            name: "Noah Brown",
-            age: 3,
-            room: "Toddlers",
-            allergies: [],
-            dietaryRestrictions: [],
-            medicalNotes: "Asthma - blue inhaler in office, use before outdoor play if wheezy"
-,
-            photoName: "person.circle.fill",
-            keyworkerName: currentKeyworkerName,
-            emergencyContact: "Rachel Brown",
-            emergencyPhone: "07700 900789"
-        ),
-        Child(
-            name: "Ava Davis",
-            age: 2,
-            room: "Toddlers",
-            allergies: [],
-            dietaryRestrictions: [],
-            medicalNotes: "",
-            photoName: "person.circle.fill",
-            keyworkerName: currentKeyworkerName,
-            emergencyContact: "Michael Davis",
-            emergencyPhone: "07700 900321"
-        )
-    ]
+
+    lazy var sampleChildren: [Child] = {
+        let children: [Child] = [
+            Child(
+                name: "Oliver Taylor",
+                age: 3,
+                room: "Toddlers",
+                allergies: ["Peanuts", "Tree nuts"],
+                dietaryRestrictions: [],
+                medicalNotes: "",
+                photoName: "person.circle.fill",
+                keyworkerName: currentKeyworkerName,
+                emergencyContact: "James Taylor",
+                emergencyPhone: "07700 900123"
+            ),
+            Child(
+                name: "Emma Wilson",
+                age: 2,
+                room: "Toddlers",
+                allergies: [],
+                dietaryRestrictions: ["Dairy free"],
+                medicalNotes: "",
+                photoName: "person.circle.fill",
+                keyworkerName: currentKeyworkerName,
+                emergencyContact: "Sophie Wilson",
+                emergencyPhone: "07700 900456"
+            ),
+            Child(
+                name: "Noah Brown",
+                age: 3,
+                room: "Toddlers",
+                allergies: [],
+                dietaryRestrictions: [],
+                medicalNotes: "Asthma - blue inhaler in office, use before outdoor play if wheezy",
+                photoName: "person.circle.fill",
+                keyworkerName: currentKeyworkerName,
+                emergencyContact: "Rachel Brown",
+                emergencyPhone: "07700 900789"
+            ),
+            Child(
+                name: "Ava Davis",
+                age: 2,
+                room: "Toddlers",
+                allergies: [],
+                dietaryRestrictions: [],
+                medicalNotes: "",
+                photoName: "person.circle.fill",
+                keyworkerName: currentKeyworkerName,
+                emergencyContact: "Michael Davis",
+                emergencyPhone: "07700 900321"
+            )
+        ]
+        // Insert into the in-memory context so ARC + SwiftData lifecycle is safe
+        children.forEach { _modelContext.insert($0) }
+        return children
+    }()
     
     // MARK: - Sample Diary Entries
     
@@ -366,18 +396,33 @@ class SampleDataProvider {
     
     // MARK: - Object Caches
     //
-    // CRITICAL: SwiftData @Model objects crash with SIGABRT (malloc: pointer being freed
-    // was not allocated) when ARC releases them without a ModelContext. Previously every
-    // call to getAlerts()/getDiaryEntries()/getIncidents() created BRAND NEW @Model objects.
-    // When a ViewModel called loadData() twice (e.g. after acknowledgeAlert), the first set
-    // of objects was released — triggering the SwiftData deinit crash.
+    // Each cache is a lazy closure that:
+    //   1. Creates the @Model objects
+    //   2. Inserts them into _modelContext immediately
+    //   3. Caches them so the same instances are returned every call
     //
-    // Fix: use private lazy vars so each @Model object is created exactly ONCE for the
-    // lifetime of SampleDataProvider.shared. The same instances are returned on every call.
+    // Inserting into a ModelContext before any reads/writes prevents the
+    // "malloc: pointer being freed was not allocated" SIGABRT that occurs
+    // when SwiftData's internal allocator tries to deinit objects that
+    // were never registered with a persistent store.
     //
-    private lazy var _diaryEntriesCache: [DiaryEntry]   = sampleDiaryEntries(for: sampleChildren)
-    private lazy var _incidentsCache: [IncidentReport]  = sampleIncidents(for: sampleChildren)
-    private lazy var _alertsCache: [AlertItem]          = sampleAlerts(for: sampleChildren)
+    private lazy var _diaryEntriesCache: [DiaryEntry] = {
+        let entries = sampleDiaryEntries(for: sampleChildren)
+        entries.forEach { _modelContext.insert($0) }
+        return entries
+    }()
+
+    private lazy var _incidentsCache: [IncidentReport] = {
+        let incidents = sampleIncidents(for: sampleChildren)
+        incidents.forEach { _modelContext.insert($0) }
+        return incidents
+    }()
+
+    private lazy var _alertsCache: [AlertItem] = {
+        let alerts = sampleAlerts(for: sampleChildren)
+        alerts.forEach { _modelContext.insert($0) }
+        return alerts
+    }()
 
     // MARK: - Helper Methods
 
