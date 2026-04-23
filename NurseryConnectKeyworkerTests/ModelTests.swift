@@ -1,16 +1,43 @@
-//
+﻿//
 //  ModelTests.swift
 //  NurseryConnectKeyworkerTests
 //
 //  Unit tests for all SwiftData model types.
-//  Tests cover computed properties, enum defaults, and edge cases.
+//  Each test class owns an in-memory ModelContainer so @Model objects
+//  always have a valid backing store â€” preventing SIGABRT at deinit.
 //
 
 import XCTest
+import SwiftData
 @testable import NurseryConnectKeyworker
+
+// MARK: - Shared schema helper
+
+private func makeTestContainer() -> ModelContainer {
+    let schema = Schema([Child.self, DiaryEntry.self, IncidentReport.self, AlertItem.self])
+    let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+    return try! ModelContainer(for: schema, configurations: [config])
+}
+
+// MARK: - Child Model Tests
 
 @MainActor
 final class ChildModelTests: XCTestCase {
+
+    private var container: ModelContainer!
+    private var context: ModelContext!
+
+    override func setUp() {
+        super.setUp()
+        container = makeTestContainer()
+        context = ModelContext(container)
+    }
+
+    override func tearDown() {
+        context = nil
+        container = nil
+        super.tearDown()
+    }
 
     // MARK: - displayAge
 
@@ -81,7 +108,7 @@ final class ChildModelTests: XCTestCase {
         dietaryRestrictions: [String] = [],
         medicalNotes: String = ""
     ) -> Child {
-        Child(
+        let child = Child(
             name: name,
             age: age,
             room: room,
@@ -92,6 +119,8 @@ final class ChildModelTests: XCTestCase {
             emergencyContact: "Test Parent",
             emergencyPhone: "07700000000"
         )
+        context.insert(child)
+        return child
     }
 }
 
@@ -99,6 +128,21 @@ final class ChildModelTests: XCTestCase {
 
 @MainActor
 final class DiaryEntryModelTests: XCTestCase {
+
+    private var container: ModelContainer!
+    private var context: ModelContext!
+
+    override func setUp() {
+        super.setUp()
+        container = makeTestContainer()
+        context = ModelContext(container)
+    }
+
+    override func tearDown() {
+        context = nil
+        container = nil
+        super.tearDown()
+    }
 
     // MARK: - entryType computed property
 
@@ -148,17 +192,17 @@ final class DiaryEntryModelTests: XCTestCase {
 
     func test_moodEmoji_veryHappy_forRating5() {
         let entry = makeEntry(moodRating: 5)
-        XCTAssertEqual(entry.moodEmoji, "😄")
+        XCTAssertEqual(entry.moodEmoji, "ðŸ˜„")
     }
 
     func test_moodEmoji_verySad_forRating1() {
         let entry = makeEntry(moodRating: 1)
-        XCTAssertEqual(entry.moodEmoji, "😢")
+        XCTAssertEqual(entry.moodEmoji, "ðŸ˜¢")
     }
 
     func test_moodEmoji_neutral_forRating3() {
         let entry = makeEntry(moodRating: 3)
-        XCTAssertEqual(entry.moodEmoji, "😐")
+        XCTAssertEqual(entry.moodEmoji, "ðŸ˜")
     }
 
     // MARK: - Helpers
@@ -180,6 +224,7 @@ final class DiaryEntryModelTests: XCTestCase {
             duration: duration,
             moodRating: moodRating
         )
+        context.insert(entry)
         return entry
     }
 }
@@ -188,6 +233,21 @@ final class DiaryEntryModelTests: XCTestCase {
 
 @MainActor
 final class IncidentReportModelTests: XCTestCase {
+
+    private var container: ModelContainer!
+    private var context: ModelContext!
+
+    override func setUp() {
+        super.setUp()
+        container = makeTestContainer()
+        context = ModelContext(container)
+    }
+
+    override func tearDown() {
+        context = nil
+        container = nil
+        super.tearDown()
+    }
 
     // MARK: - isPending
 
@@ -269,8 +329,8 @@ final class IncidentReportModelTests: XCTestCase {
     func test_statusBadges_containsSentLabels_whenBothComplete() {
         let report = makeReport(parentNotified: true, managerReviewed: true)
         let badges = report.statusBadges
-        XCTAssertTrue(badges.contains("Parent Notified ✓"))
-        XCTAssertTrue(badges.contains("Manager Reviewed ✓"))
+        XCTAssertTrue(badges.contains("Parent Notified âœ“"))
+        XCTAssertTrue(badges.contains("Manager Reviewed âœ“"))
     }
 
     // MARK: - Helpers
@@ -281,7 +341,7 @@ final class IncidentReportModelTests: XCTestCase {
         parentNotified: Bool = false,
         managerReviewed: Bool = false
     ) -> IncidentReport {
-        IncidentReport(
+        let report = IncidentReport(
             childId: UUID(),
             childName: "Test Child",
             category: IncidentCategory(rawValue: categoryRaw) ?? .other,
@@ -295,6 +355,8 @@ final class IncidentReportModelTests: XCTestCase {
             managerReviewed: managerReviewed,
             reportedByStaff: "Test Worker"
         )
+        context.insert(report)
+        return report
     }
 }
 
@@ -303,25 +365,28 @@ final class IncidentReportModelTests: XCTestCase {
 @MainActor
 final class AlertItemModelTests: XCTestCase {
 
+    private var container: ModelContainer!
+    private var context: ModelContext!
+
+    override func setUp() {
+        super.setUp()
+        container = makeTestContainer()
+        context = ModelContext(container)
+    }
+
+    override func tearDown() {
+        context = nil
+        container = nil
+        super.tearDown()
+    }
+
     func test_alertType_returnsCorrect_forAllergy() {
-        let alert = AlertItem(
-            childName: "Test",
-            alertType: .allergy,
-            priority: .urgent,
-            title: "Allergy Alert",
-            message: "Test message"
-        )
+        let alert = makeAlert(alertType: .allergy, priority: .urgent, title: "Allergy Alert")
         XCTAssertEqual(alert.alertType, .allergy)
     }
 
     func test_priority_returnsCorrect_forUrgent() {
-        let alert = AlertItem(
-            childName: "Test",
-            alertType: .reminder,
-            priority: .urgent,
-            title: "Test",
-            message: "Test"
-        )
+        let alert = makeAlert(alertType: .reminder, priority: .urgent, title: "Test")
         XCTAssertEqual(alert.priority, .urgent)
     }
 
@@ -334,13 +399,25 @@ final class AlertItemModelTests: XCTestCase {
     }
 
     func test_isAcknowledged_defaultsFalse() {
-        let alert = AlertItem(
-            childName: "Test",
-            alertType: .reminder,
-            priority: .low,
-            title: "Test",
-            message: "Test"
-        )
+        let alert = makeAlert(alertType: .reminder, priority: .low, title: "Test")
         XCTAssertFalse(alert.isAcknowledged)
+    }
+
+    // MARK: - Helpers
+
+    private func makeAlert(
+        alertType: AlertType,
+        priority: AlertPriority,
+        title: String
+    ) -> AlertItem {
+        let alert = AlertItem(
+            childName: "Test Child",
+            alertType: alertType,
+            priority: priority,
+            title: title,
+            message: "Test message"
+        )
+        context.insert(alert)
+        return alert
     }
 }
