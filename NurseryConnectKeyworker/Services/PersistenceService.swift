@@ -120,7 +120,7 @@ class PersistenceService {
         }
         
         // Insert Alerts
-        for alert in SampleDataProvider.shared.sampleAlerts {
+        for alert in SampleDataProvider.shared.sampleAlerts(for: SampleDataProvider.shared.sampleChildren) {
             context.insert(alert)
         }
         
