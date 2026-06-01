@@ -38,6 +38,10 @@ struct NurseryConnectKeyworkerApp: App {
                 configureAccessibility()
             }
         }
+        // iPad keyboard shortcuts
+        .commands {
+            AppKeyboardCommands()
+        }
     }
     
     // MARK: - Configuration

@@ -14,6 +14,7 @@ struct ChildCard: View {
     let onLogNap: () -> Void
     let onLogMood: () -> Void
     let onReportIncident: () -> Void
+    var onObservationNotes: (() -> Void)? = nil
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -94,6 +95,16 @@ struct ChildCard: View {
                     color: .red,
                     action: onReportIncident
                 )
+
+                // PencilKit observation notes (iPad)
+                if let onObservationNotes {
+                    QuickActionButton(
+                        icon: "pencil.and.list.clipboard",
+                        label: "Observe",
+                        color: .teal,
+                        action: onObservationNotes
+                    )
+                }
             }
         }
         .padding()

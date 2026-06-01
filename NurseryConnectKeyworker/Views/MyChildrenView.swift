@@ -12,8 +12,10 @@ struct MyChildrenView: View {
     @State private var viewModel = ChildrenViewModel()
     @State private var showingAddEntry = false
     @State private var showingIncidentReport = false
+    @State private var showingObservationNotes = false
     @State private var selectedEntryType: DiaryEntryType?
     @State private var selectedChildForAction: Child?
+    @Environment(\.horizontalSizeClass) private var sizeClass
     
     var body: some View {
         NavigationStack {
@@ -36,7 +38,10 @@ struct MyChildrenView: View {
                                 },
                                 onReportIncident: {
                                     handleIncidentReport(child: child)
-                                }
+                                },
+                                onObservationNotes: sizeClass == .regular ? {
+                                    handleObservationNotes(child: child)
+                                } : nil
                             )
                             .transition(.asymmetric(
                                 insertion: .push(from: .trailing).combined(with: .opacity),
@@ -44,6 +49,12 @@ struct MyChildrenView: View {
                             ))
                             .onTapGesture {
                                 viewModel.selectChild(child)
+                            }
+                            // iPadOS drag-and-drop: drag a child card to share details
+                            .draggable(child.name) {
+                                Label(child.name, systemImage: child.photoName)
+                                    .padding(10)
+                                    .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 10))
                             }
                         }
                     }
@@ -69,6 +80,11 @@ struct MyChildrenView: View {
             .sheet(isPresented: $showingIncidentReport) {
                 if let child = selectedChildForAction {
                     IncidentReportFormView(preselectedChild: child)
+                }
+            }
+            .sheet(isPresented: $showingObservationNotes) {
+                if let child = selectedChildForAction {
+                    ObservationNotesView(child: child)
                 }
             }
             .accessibilityLabel("My assigned children list")
@@ -101,6 +117,11 @@ struct MyChildrenView: View {
     private func handleIncidentReport(child: Child) {
         selectedChildForAction = child
         showingIncidentReport = true
+    }
+
+    private func handleObservationNotes(child: Child) {
+        selectedChildForAction = child
+        showingObservationNotes = true
     }
 }
 
