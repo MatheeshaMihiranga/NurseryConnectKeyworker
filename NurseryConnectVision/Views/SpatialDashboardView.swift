@@ -21,6 +21,8 @@ struct SpatialDashboardView: View {
 
     @State private var selectedChild: VisionChild? = nil
     @State private var showChildDetail = false
+    @State private var showAddChild = false
+    @State private var showManageChildren = false
 
     var body: some View {
         NavigationStack {
@@ -38,10 +40,34 @@ struct SpatialDashboardView: View {
                 ToolbarItem(placement: .primaryAction) {
                     immersiveToggleButton
                 }
+                ToolbarItem(placement: .secondaryAction) {
+                    Button {
+                        showAddChild = true
+                    } label: {
+                        Label("Add Child", systemImage: "person.badge.plus")
+                    }
+                    .accessibilityLabel("Add a new child")
+                }
+                ToolbarItem(placement: .secondaryAction) {
+                    Button {
+                        showManageChildren = true
+                    } label: {
+                        Label("Manage Children", systemImage: "person.3.sequence.fill")
+                    }
+                    .accessibilityLabel("Manage children list")
+                }
             }
         }
         .sheet(item: $selectedChild) { child in
             SpatialChildDetailView(child: child)
+        }
+        .sheet(isPresented: $showAddChild) {
+            AddEditChildView(editingChild: nil)
+                .environment(appModel)
+        }
+        .sheet(isPresented: $showManageChildren) {
+            ChildrenManagementView()
+                .environment(appModel)
         }
     }
 
@@ -137,20 +163,41 @@ struct SpatialDashboardView: View {
 
     private var childrenSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("My Children")
-                .font(.title2.bold())
-
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 20) {
-                    ForEach(appModel.children) { child in
-                        SpatialChildCard(child: child)
-                            .onTapGesture {
-                                selectedChild = child
-                            }
-                            .hoverEffect(.highlight)
-                    }
+            HStack {
+                Text("My Children")
+                    .font(.title2.bold())
+                Spacer()
+                Button {
+                    showAddChild = true
+                } label: {
+                    Label("Add Child", systemImage: "person.badge.plus")
+                        .font(.subheadline)
                 }
-                .padding(.vertical, 4)
+                .buttonStyle(.bordered)
+                .tint(.blue)
+                .accessibilityLabel("Add a new child")
+            }
+
+            if appModel.children.isEmpty {
+                ContentUnavailableView(
+                    "No Children Added",
+                    systemImage: "person.3",
+                    description: Text("Tap "Add Child" to register a child to your keyworker group.")
+                )
+                .frame(minHeight: 140)
+            } else {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 20) {
+                        ForEach(appModel.children) { child in
+                            SpatialChildCard(child: child)
+                                .onTapGesture {
+                                    selectedChild = child
+                                }
+                                .hoverEffect(.highlight)
+                        }
+                    }
+                    .padding(.vertical, 4)
+                }
             }
         }
     }
