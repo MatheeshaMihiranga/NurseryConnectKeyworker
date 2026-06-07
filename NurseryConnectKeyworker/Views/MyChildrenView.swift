@@ -185,7 +185,7 @@ struct MyChildrenView: View {
         showingObservationNotes = true
     }
 }
-}
+
 
 #Preview {
     MyChildrenView()
