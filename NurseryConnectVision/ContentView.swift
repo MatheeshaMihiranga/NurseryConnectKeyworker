@@ -2,22 +2,16 @@
 //  ContentView.swift
 //  NurseryConnectVision
 //
-//  Created by Ushani Dahanayake on 2026-06-01.
+//  Unused stub kept for Xcode target compatibility.
+//  The app entry point in NurseryConnectVisionApp.swift
+//  shows SpatialDashboardView directly.
 //
 
 import SwiftUI
-import RealityKit
-import RealityKitContent
 
 struct ContentView: View {
     var body: some View {
-        VStack {
-            Model3D(named: "Scene", bundle: realityKitContentBundle)
-                .padding(.bottom, 50)
-
-            Text("Hello, world!")
-        }
-        .padding()
+        SpatialDashboardView()
     }
 }
 
