@@ -10,7 +10,7 @@ import Foundation
 import SwiftData
 
 @Model
-class Child {
+class Child: Identifiable {
     @Attribute(.unique) var id: UUID
     var name: String
     var age: Int

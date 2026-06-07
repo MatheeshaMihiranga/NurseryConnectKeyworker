@@ -38,8 +38,67 @@ class DataService {
         let children = getAssignedChildren()
         return children.first { $0.id == id }
     }
-    
-    // MARK: - Diary Entry Operations
+
+    // MARK: - Children CRUD
+
+    func addChild(
+        name: String,
+        age: Int,
+        room: String,
+        allergies: [String],
+        dietaryRestrictions: [String],
+        medicalNotes: String,
+        emergencyContact: String,
+        emergencyPhone: String
+    ) {
+        let child = Child(
+            name: name,
+            age: age,
+            room: room,
+            allergies: allergies,
+            dietaryRestrictions: dietaryRestrictions,
+            medicalNotes: medicalNotes,
+            keyworkerName: SampleDataProvider.shared.currentKeyworkerName,
+            emergencyContact: emergencyContact,
+            emergencyPhone: emergencyPhone
+        )
+        if !useSampleData {
+            persistenceService.mainContext.insert(child)
+            persistenceService.save()
+        }
+        print("✅ Child added: \(name)")
+    }
+
+    func updateChild(_ child: Child,
+                     name: String,
+                     age: Int,
+                     room: String,
+                     allergies: [String],
+                     dietaryRestrictions: [String],
+                     medicalNotes: String,
+                     emergencyContact: String,
+                     emergencyPhone: String) {
+        child.name = name
+        child.age = age
+        child.room = room
+        child.allergies = allergies
+        child.dietaryRestrictions = dietaryRestrictions
+        child.medicalNotes = medicalNotes
+        child.emergencyContact = emergencyContact
+        child.emergencyPhone = emergencyPhone
+        if !useSampleData {
+            persistenceService.save()
+        }
+        print("✅ Child updated: \(name)")
+    }
+
+    func deleteChild(_ child: Child) {
+        if !useSampleData {
+            persistenceService.mainContext.delete(child)
+            persistenceService.save()
+        }
+        print("✅ Child deleted: \(child.name)")
+    }
     
     func getDiaryEntries(for childId: UUID? = nil) -> [DiaryEntry] {
         if useSampleData {

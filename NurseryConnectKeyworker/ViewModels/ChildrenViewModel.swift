@@ -61,16 +61,89 @@ class ChildrenViewModel {
     var childrenCount: Int {
         assignedChildren.count
     }
-    
+
     var childrenWithAllergies: [Child] {
         assignedChildren.filter { $0.hasAllergies }
     }
-    
+
     var childrenWithDietaryRestrictions: [Child] {
         assignedChildren.filter { $0.hasDietaryRestrictions }
     }
-    
+
     var childrenWithMedicalNotes: [Child] {
         assignedChildren.filter { $0.hasMedicalNotes }
+    }
+
+    // MARK: - CRUD
+
+    func addChild(
+        name: String,
+        age: Int,
+        room: String,
+        allergies: [String],
+        dietaryRestrictions: [String],
+        medicalNotes: String,
+        emergencyContact: String,
+        emergencyPhone: String
+    ) {
+        dataService.addChild(
+            name: name,
+            age: age,
+            room: room,
+            allergies: allergies,
+            dietaryRestrictions: dietaryRestrictions,
+            medicalNotes: medicalNotes,
+            emergencyContact: emergencyContact,
+            emergencyPhone: emergencyPhone
+        )
+        // Append directly to live list so UI updates instantly
+        let newChild = Child(
+            name: name,
+            age: age,
+            room: room,
+            allergies: allergies,
+            dietaryRestrictions: dietaryRestrictions,
+            medicalNotes: medicalNotes,
+            keyworkerName: SampleDataProvider.shared.currentKeyworkerName,
+            emergencyContact: emergencyContact,
+            emergencyPhone: emergencyPhone
+        )
+        SampleDataProvider.shared.sampleChildren.append(newChild)
+        loadChildren()
+    }
+
+    func updateChild(_ child: Child,
+                     name: String,
+                     age: Int,
+                     room: String,
+                     allergies: [String],
+                     dietaryRestrictions: [String],
+                     medicalNotes: String,
+                     emergencyContact: String,
+                     emergencyPhone: String) {
+        dataService.updateChild(
+            child,
+            name: name,
+            age: age,
+            room: room,
+            allergies: allergies,
+            dietaryRestrictions: dietaryRestrictions,
+            medicalNotes: medicalNotes,
+            emergencyContact: emergencyContact,
+            emergencyPhone: emergencyPhone
+        )
+        loadChildren()
+    }
+
+    func deleteChild(_ child: Child) {
+        dataService.deleteChild(child)
+        // Remove from the in-memory cache so the list updates immediately
+        SampleDataProvider.shared.sampleChildren.removeAll { $0.id == child.id }
+        loadChildren()
+    }
+
+    func deleteChildren(at offsets: IndexSet) {
+        let toDelete = offsets.map { filteredChildren[$0] }
+        toDelete.forEach { deleteChild($0) }
     }
 }

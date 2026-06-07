@@ -10,10 +10,6 @@ import SwiftUI
 
 struct SpatialChildCard: View {
     let child: VisionChild
-    @Environment(AppModel.self) private var appModel
-
-    @State private var showEditSheet = false
-    @State private var showDeleteConfirm = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -80,38 +76,6 @@ struct SpatialChildCard: View {
         .clipShape(RoundedRectangle(cornerRadius: 20))
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilityDescription)
-        // Context menu: Edit / Delete
-        .contextMenu {
-            Button {
-                showEditSheet = true
-            } label: {
-                Label("Edit Child", systemImage: "pencil")
-            }
-
-            Divider()
-
-            Button(role: .destructive) {
-                showDeleteConfirm = true
-            } label: {
-                Label("Remove Child", systemImage: "person.badge.minus")
-            }
-        }
-        .sheet(isPresented: $showEditSheet) {
-            AddEditChildView(editingChild: child)
-                .environment(appModel)
-        }
-        .confirmationDialog(
-            "Remove \(child.name)?",
-            isPresented: $showDeleteConfirm,
-            titleVisibility: .visible
-        ) {
-            Button("Remove", role: .destructive) {
-                appModel.deleteChild(child)
-            }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("This will permanently remove \(child.name) from your assigned children list.")
-        }
     }
 
     // MARK: - Helpers

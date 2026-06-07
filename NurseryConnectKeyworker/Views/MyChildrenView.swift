@@ -13,6 +13,10 @@ struct MyChildrenView: View {
     @State private var showingAddEntry = false
     @State private var showingIncidentReport = false
     @State private var showingObservationNotes = false
+    @State private var showingAddChild = false
+    @State private var childToEdit: Child? = nil
+    @State private var childToDelete: Child? = nil
+    @State private var showDeleteConfirm = false
     @State private var selectedEntryType: DiaryEntryType?
     @State private var selectedChildForAction: Child?
     @Environment(\.horizontalSizeClass) private var sizeClass
@@ -50,7 +54,21 @@ struct MyChildrenView: View {
                             .onTapGesture {
                                 viewModel.selectChild(child)
                             }
-                            // iPadOS drag-and-drop: drag a child card to share details
+                            // Long-press context menu: Edit or Delete
+                            .contextMenu {
+                                Button {
+                                    childToEdit = child
+                                } label: {
+                                    Label("Edit Child", systemImage: "pencil")
+                                }
+                                Button(role: .destructive) {
+                                    childToDelete = child
+                                    showDeleteConfirm = true
+                                } label: {
+                                    Label("Delete Child", systemImage: "trash")
+                                }
+                            }
+                            // iPadOS drag-and-drop
                             .draggable(child.name) {
                                 Label(child.name, systemImage: child.photoName)
                                     .padding(10)
@@ -66,9 +84,50 @@ struct MyChildrenView: View {
                 text: $viewModel.searchText,
                 prompt: "Search by name or room"
             )
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        showingAddChild = true
+                    } label: {
+                        Label("Add Child", systemImage: "person.badge.plus")
+                    }
+                    .accessibilityLabel("Add new child")
+                }
+            }
             .onAppear {
                 viewModel.loadChildren()
             }
+            // Add child
+            .sheet(isPresented: $showingAddChild) {
+                AddEditChildView { _ in
+                    viewModel.loadChildren()
+                }
+            }
+            // Edit child (long-press context menu)
+            .sheet(item: $childToEdit) { child in
+                AddEditChildView(existingChild: child) { _ in
+                    viewModel.loadChildren()
+                }
+            }
+            // Delete confirmation
+            .confirmationDialog(
+                "Delete \(childToDelete?.name ?? "this child")?",
+                isPresented: $showDeleteConfirm,
+                titleVisibility: .visible
+            ) {
+                Button("Delete", role: .destructive) {
+                    if let child = childToDelete {
+                        viewModel.deleteChild(child)
+                    }
+                    childToDelete = nil
+                }
+                Button("Cancel", role: .cancel) {
+                    childToDelete = nil
+                }
+            } message: {
+                Text("This will permanently remove the child and all their records. This action cannot be undone.")
+            }
+            // Diary entry sheet
             .sheet(isPresented: $showingAddEntry) {
                 if let child = selectedChildForAction, let type = selectedEntryType {
                     AddDiaryEntryView(
@@ -77,11 +136,13 @@ struct MyChildrenView: View {
                     )
                 }
             }
+            // Incident report sheet
             .sheet(isPresented: $showingIncidentReport) {
                 if let child = selectedChildForAction {
                     IncidentReportFormView(preselectedChild: child)
                 }
             }
+            // Observation notes sheet
             .sheet(isPresented: $showingObservationNotes) {
                 if let child = selectedChildForAction {
                     ObservationNotesView(child: child)
@@ -123,6 +184,7 @@ struct MyChildrenView: View {
         selectedChildForAction = child
         showingObservationNotes = true
     }
+}
 }
 
 #Preview {
