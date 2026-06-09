@@ -8,17 +8,30 @@
 
 import SwiftUI
 
+// Single enum drives all sheet presentations — avoids multiple .sheet modifier bug
+private enum ActiveSheet: Identifiable {
+    case addEntry(Child, DiaryEntryType)
+    case incidentReport(Child)
+    case observationNotes(Child)
+    case addChild
+    case editChild(Child)
+
+    var id: String {
+        switch self {
+        case .addEntry(let c, let t):   return "addEntry-\(c.id)-\(t.rawValue)"
+        case .incidentReport(let c):    return "incident-\(c.id)"
+        case .observationNotes(let c):  return "observe-\(c.id)"
+        case .addChild:                 return "addChild"
+        case .editChild(let c):         return "editChild-\(c.id)"
+        }
+    }
+}
+
 struct MyChildrenView: View {
     @State private var viewModel = ChildrenViewModel()
-    @State private var showingAddEntry = false
-    @State private var showingIncidentReport = false
-    @State private var showingObservationNotes = false
-    @State private var showingAddChild = false
-    @State private var childToEdit: Child? = nil
+    @State private var activeSheet: ActiveSheet? = nil
     @State private var childToDelete: Child? = nil
     @State private var showDeleteConfirm = false
-    @State private var selectedEntryType: DiaryEntryType?
-    @State private var selectedChildForAction: Child?
     @Environment(\.horizontalSizeClass) private var sizeClass
     
     var body: some View {
@@ -44,7 +57,7 @@ struct MyChildrenView: View {
                                     handleIncidentReport(child: child)
                                 },
                                 onObservationNotes: sizeClass == .regular ? {
-                                    handleObservationNotes(child: child)
+                                    activeSheet = .observationNotes(child)
                                 } : nil
                             )
                             .transition(.asymmetric(
@@ -57,7 +70,7 @@ struct MyChildrenView: View {
                             // Long-press context menu: Edit or Delete
                             .contextMenu {
                                 Button {
-                                    childToEdit = child
+                                    activeSheet = .editChild(child)
                                 } label: {
                                     Label("Edit Child", systemImage: "pencil")
                                 }
@@ -87,7 +100,7 @@ struct MyChildrenView: View {
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button {
-                        showingAddChild = true
+                        activeSheet = .addChild
                     } label: {
                         Label("Add Child", systemImage: "person.badge.plus")
                     }
@@ -97,16 +110,19 @@ struct MyChildrenView: View {
             .onAppear {
                 viewModel.loadChildren()
             }
-            // Add child
-            .sheet(isPresented: $showingAddChild) {
-                AddEditChildView { _ in
-                    viewModel.loadChildren()
-                }
-            }
-            // Edit child (long-press context menu)
-            .sheet(item: $childToEdit) { child in
-                AddEditChildView(existingChild: child) { _ in
-                    viewModel.loadChildren()
+            // Single sheet — all cases handled here
+            .sheet(item: $activeSheet) { sheet in
+                switch sheet {
+                case .addEntry(let child, let type):
+                    AddDiaryEntryView(preselectedChild: child, preselectedType: type)
+                case .incidentReport(let child):
+                    IncidentReportFormView(preselectedChild: child)
+                case .observationNotes(let child):
+                    ObservationNotesView(child: child)
+                case .addChild:
+                    AddEditChildView { _ in viewModel.loadChildren() }
+                case .editChild(let child):
+                    AddEditChildView(existingChild: child) { _ in viewModel.loadChildren() }
                 }
             }
             // Delete confirmation
@@ -126,27 +142,6 @@ struct MyChildrenView: View {
                 }
             } message: {
                 Text("This will permanently remove the child and all their records. This action cannot be undone.")
-            }
-            // Diary entry sheet
-            .sheet(isPresented: $showingAddEntry) {
-                if let child = selectedChildForAction, let type = selectedEntryType {
-                    AddDiaryEntryView(
-                        preselectedChild: child,
-                        preselectedType: type
-                    )
-                }
-            }
-            // Incident report sheet
-            .sheet(isPresented: $showingIncidentReport) {
-                if let child = selectedChildForAction {
-                    IncidentReportFormView(preselectedChild: child)
-                }
-            }
-            // Observation notes sheet
-            .sheet(isPresented: $showingObservationNotes) {
-                if let child = selectedChildForAction {
-                    ObservationNotesView(child: child)
-                }
             }
             .accessibilityLabel("My assigned children list")
         }
@@ -170,19 +165,11 @@ struct MyChildrenView: View {
     // MARK: - Action Handlers
     
     private func handleQuickAction(child: Child, entryType: DiaryEntryType) {
-        selectedChildForAction = child
-        selectedEntryType = entryType
-        showingAddEntry = true
+        activeSheet = .addEntry(child, entryType)
     }
     
     private func handleIncidentReport(child: Child) {
-        selectedChildForAction = child
-        showingIncidentReport = true
-    }
-
-    private func handleObservationNotes(child: Child) {
-        selectedChildForAction = child
-        showingObservationNotes = true
+        activeSheet = .incidentReport(child)
     }
 }
 
